@@ -6,7 +6,7 @@ MIDDLEWARE_ARCH = "${MACHINE}-middleware"
 PACKAGE_EXTRA_ARCHS:append = " ${MIDDLEWARE_ARCH}"
 
 # See release note for configuration details.
-RDK_ARTIFACTS_BASE_URL ?? = ""
+RDK_ARTIFACTS_BASE_URL ?= ""
 
 RELEASE_NUM = "2.7.0"
 MW_IPK_PATH = "${MIDDLEWARE_ARCH}/${RELEASE_NUM}/ipks/${BUILD_VARIANT}"
