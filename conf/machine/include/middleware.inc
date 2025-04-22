@@ -8,7 +8,7 @@ PACKAGE_EXTRA_ARCHS:append = " ${MIDDLEWARE_ARCH}"
 # See release note for configuration details.
 RDK_ARTIFACTS_BASE_URL ?= ""
 
-RELEASE_NUM = "2.1.0"
+RELEASE_NUM = "1.1.1-community"
 MW_IPK_PATH = "${MIDDLEWARE_ARCH}/${RELEASE_NUM}/ipks/${BUILD_VARIANT}"
 MW_IPK_SERVER_PATH = "${RDK_ARTIFACTS_BASE_URL}/${MW_IPK_PATH}"
 
