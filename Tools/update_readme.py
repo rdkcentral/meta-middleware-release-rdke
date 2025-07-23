@@ -195,12 +195,21 @@ def main():
     else:
         test_report_line = f"Test Report: Contact {author}"
 
+    # Set PACKAGE_LIST_LINE only for Vendor, Middleware, or Application layers
+    if rdke_layer in ["Vendor", "Middleware", "Application"]:
+        package_list_line = f"The [Packages And Versions]({rdke_layer}PackagesAndVersions.md) file provides a table listing {rdke_layer}-supplied package names and their versions of this release."
+    else:
+        package_list_line = ""
+
     content = content.replace('<RELEASE_VERSION>', release_version)
     content = content.replace('<YOCTO_VERSION>', yocto_version)
     content = content.replace('<REMOTE_TABLE>', remote_md)
     content = content.replace('<LAYER_TABLE>', project_md)
     content = content.replace('<RDKE_LAYER>', rdke_layer)
     content = content.replace('<BASE_URL>', original_base_url)
+    # Remove angle brackets if present around PACKAGE_LIST_LINE
+    content = re.sub(r'<\s*PACKAGE_LIST_LINE\s*>', package_list_line, content)
+    content = content.replace('PACKAGE_LIST_LINE', package_list_line)
     content = content.replace('<STACKLAYERING_VERSION>', meta_stacklayering_version)
     content = content.replace('<GEN_DATE>', gen_date)
     content = content.replace('<AUTHOR>', author)
