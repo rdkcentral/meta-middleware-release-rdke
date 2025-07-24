@@ -13,15 +13,15 @@
 ### <RDKE_LAYER> Release Details
 [<RDKE_LAYER> Release <RELEASE_VERSION>](<BASE_URL>/releases/tag/<RELEASE_VERSION>) has the below enlisted layer combination.
 
+| Layer Name | Current Revision/Tag |
+|------------|-------------------|
+<LAYER_TABLE>
+
 For a comprehensive list of changes, updates, and release history, refer to the [Changelog](CHANGELOG.md).
 
 <PACKAGE_LIST_LINE>
 
 <TEST_REPORT_LINE>
-
-| Layer Name | Current Revision/Tag |
-|------------|-------------------|
-<LAYER_TABLE>
 
 For RDKE <RDKE_LAYER> layer specific build instructions, refer [this](<BASE_URL>/blob/<RELEASE_VERSION>/README.md)
 
@@ -38,13 +38,13 @@ This project is distributed under the terms outlined in the associated [License]
 # Requires Python 3.x
 # Setup requirements (one time): pip install requests
 # RDKE_LAYER can be Vendor/Middleware/Application
-Usage: python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> "AUTHOR,email" "[TestReportUrl(optional)]"
+Usage: python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> "AUTHOR,email" "TestReportUrl"
 ```
 - Replace the arguments with the actual release/tag/commit values matching the release.
 
 Eg (Linux Host):
 ```sh
-python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md https://github.com/rdkcentral/vendor-manifest-raspberrypi rdke-raspberrypi.xml 4.5.1 Vendor "ReleaseTeam, email_id" "https://example.com/test-report"
+python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md https://github.com/rdkcentral/vendor-manifest-raspberrypi rdke-raspberrypi.xml 4.5.1 Middleware "ReleaseTeam, email_id" "https://example.com/test-report"
 ```
 
 ---

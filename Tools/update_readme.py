@@ -88,9 +88,9 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
 
 
 def main():
-    if len(sys.argv) not in (8, 9):
+    if len(sys.argv) != 9:
         print("Setup requirements (one time): pip install requests")
-        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> \"AUTHOR,email\" \"[TestReportUrl]\"")
+        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> \"AUTHOR,email\" \"<TestReportUrl>\"")
         sys.exit(1)
 
     template_file = sys.argv[1]
@@ -103,7 +103,7 @@ def main():
     release_version = sys.argv[5]
     rdke_layer = sys.argv[6]
     author = sys.argv[7]
-    test_report_url = sys.argv[8] if len(sys.argv) == 9 else ''
+    test_report_url = sys.argv[8]
 
     # Only convert to raw.githubusercontent.com for fetching manifests, not for README links
     fetch_base_url = base_url
@@ -192,12 +192,10 @@ def main():
     # Fill test report line if provided
     if test_report_url:
         test_report_line = f"Test Report: [{test_report_url}]({test_report_url})"
-    else:
-        test_report_line = f"Test Report: Contact {author}"
 
     # Set PACKAGE_LIST_LINE only for Vendor, Middleware, or Application layers
     if rdke_layer in ["Vendor", "Middleware", "Application"]:
-        package_list_line = f"The [Packages And Versions]({rdke_layer}PackagesAndVersions.md) file provides a table listing {rdke_layer}-supplied package names and their versions of this release."
+        package_list_line = f"The [packages and versions]({rdke_layer}PackagesAndVersions.md) file provides the list of packages in this {rdke_layer} release."
     else:
         package_list_line = ""
 

@@ -6,18 +6,12 @@
 | Manifest URL  | https://github.com/rdkcentral/middleware-manifest-rdke |
 | Release Tag   | [2.16.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/2.16.0) |
 | Yocto Version | Kirkstone |
-| Date          | 2025-07-23 15:46:15 UTC |
+| Date          | 2025-07-24 15:53:52 UTC |
 | Author        | support@rdkcentral.com |
 
 
 ### Middleware Release Details
 [Middleware Release 2.16.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/2.16.0) has the below enlisted layer combination.
-
-For a comprehensive list of changes, updates, and release history, refer to the [Changelog](CHANGELOG.md).
-
-The [Packages And Versions](MiddlewarePackagesAndVersions.md) file provides a table listing Middleware-supplied package names and their versions of this release.
-
-Test Report: Contact support@rdkcentral.com
 
 | Layer Name | Current Revision/Tag |
 |------------|-------------------|
@@ -39,6 +33,12 @@ Test Report: Contact support@rdkcentral.com
 | meta-rdk | [1.8.0](https://github.com/rdkcentral/meta-rdk/tree/1.8.0) |
 | meta-rdk-video | [1.8.0](https://github.com/rdkcentral/meta-rdk-video/tree/1.8.0) |
 
+For a comprehensive list of changes, updates, and release history, refer to the [Changelog](CHANGELOG.md).
+
+The [packages and versions](MiddlewarePackagesAndVersions.md) file provides the list of packages in this Middleware release.
+
+Test Report: [Upcoming test report url](Upcoming test report url)
+
 For RDKE Middleware layer specific build instructions, refer [this](https://github.com/rdkcentral/middleware-manifest-rdke/blob/2.16.0/README.md)
 
 ## License Details
@@ -54,13 +54,13 @@ This project is distributed under the terms outlined in the associated [License]
 # Requires Python 3.x
 # Setup requirements (one time): pip install requests
 # RDKE_LAYER can be Vendor/Middleware/Application
-Usage: python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> 2.16.0 Middleware "AUTHOR,email" "[TestReportUrl(optional)]"
+Usage: python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> 2.16.0 Middleware "AUTHOR,email" "TestReportUrl"
 ```
 - Replace the arguments with the actual release/tag/commit values matching the release.
 
 Eg (Linux Host):
 ```sh
-python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md https://github.com/rdkcentral/vendor-manifest-raspberrypi rdke-raspberrypi.xml 4.5.1 Vendor "ReleaseTeam, email_id" "https://example.com/test-report"
+python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md https://github.com/rdkcentral/vendor-manifest-raspberrypi rdke-raspberrypi.xml 4.5.1 Middleware "ReleaseTeam, email_id" "https://example.com/test-report"
 ```
 
 ---
