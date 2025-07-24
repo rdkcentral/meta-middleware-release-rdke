@@ -21,6 +21,8 @@ For a comprehensive list of changes, updates, and release history, refer to the 
 
 <PACKAGE_LIST_LINE>
 
+<FEATURE_LIST_LINE>
+
 <TEST_REPORT_LINE>
 
 For RDKE <RDKE_LAYER> layer specific build instructions, refer [this](<BASE_URL>/blob/<RELEASE_VERSION>/README.md)

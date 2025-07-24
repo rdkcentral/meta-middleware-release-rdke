@@ -88,9 +88,9 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
 
 
 def main():
-    if len(sys.argv) != 9:
+    if len(sys.argv) not in (9, 10):
         print("Setup requirements (one time): pip install requests")
-        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> \"AUTHOR,email\" \"<TestReportUrl>\"")
+        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
         sys.exit(1)
 
     template_file = sys.argv[1]
@@ -104,6 +104,8 @@ def main():
     rdke_layer = sys.argv[6]
     author = sys.argv[7]
     test_report_url = sys.argv[8]
+    feature_list_url = sys.argv[9] if len(sys.argv) == 10 else ''
+    feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
 
     # Only convert to raw.githubusercontent.com for fetching manifests, not for README links
     fetch_base_url = base_url
@@ -208,6 +210,9 @@ def main():
     # Remove angle brackets if present around PACKAGE_LIST_LINE
     content = re.sub(r'<\s*PACKAGE_LIST_LINE\s*>', package_list_line, content)
     content = content.replace('PACKAGE_LIST_LINE', package_list_line)
+    # Remove angle brackets if present around FEATURE_LIST_LINE
+    content = re.sub(r'<\s*FEATURE_LIST_LINE\s*>', feature_list_line, content)
+    content = content.replace('FEATURE_LIST_LINE', feature_list_line)
     content = content.replace('<STACKLAYERING_VERSION>', meta_stacklayering_version)
     content = content.replace('<GEN_DATE>', gen_date)
     content = content.replace('<AUTHOR>', author)
