@@ -88,24 +88,58 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
 
 
 def main():
-    if len(sys.argv) not in (9, 10):
+    # Read release_information.conf for manifest info
+    conf_path = "Tools/release_information.conf"
+    release_info = {}
+    with io.open(conf_path, 'r', encoding='utf-8') as conf_file:
+        for line in conf_file:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                k, v = line.split('=', 1)
+                release_info[k.strip()] = v.strip()
+
+    # Check required variables
+    missing_vars = []
+    for var in ["MANIFEST_REPO_BASE_URL", "MANIFEST_NAME", "RELEASE_VERSION", "RDKE_LAYER"]:
+        if not release_info.get(var, "").strip():
+            missing_vars.append(var)
+    if missing_vars:
+        print(f"Error: The following required variables are missing or empty in Tools/release_information.conf: {', '.join(missing_vars)}")
+        sys.exit(1)
+
+    if len(sys.argv) not in (5, 6):
         print("Setup requirements (one time): pip install requests")
-        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
+        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
         sys.exit(1)
 
     template_file = sys.argv[1]
     output_file = sys.argv[2]
-    base_url = sys.argv[3]
+    author = sys.argv[3]
+    test_report_url = sys.argv[4]
+    feature_list_url = sys.argv[5] if len(sys.argv) == 6 else ''
+    feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
+
+    # Read release_information.conf for manifest info
+    conf_path = "Tools/release_information.conf"
+    release_info = {}
+    with io.open(conf_path, 'r', encoding='utf-8') as conf_file:
+        for line in conf_file:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                k, v = line.split('=', 1)
+                release_info[k.strip()] = v.strip()
+
+    base_url = release_info.get('MANIFEST_REPO_BASE_URL', '')
     original_base_url = base_url
-    manifest_name = sys.argv[4]
+    manifest_name = release_info.get('MANIFEST_NAME', '')
     if not manifest_name.endswith('.xml'):
         manifest_name += '.xml'
-    release_version = sys.argv[5]
-    rdke_layer = sys.argv[6]
-    author = sys.argv[7]
-    test_report_url = sys.argv[8]
-    feature_list_url = sys.argv[9] if len(sys.argv) == 10 else ''
-    feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
+    release_version = release_info.get('RELEASE_VERSION', '')
+    rdke_layer = release_info.get('RDKE_LAYER', '')
 
     # Only convert to raw.githubusercontent.com for fetching manifests, not for README links
     fetch_base_url = base_url
