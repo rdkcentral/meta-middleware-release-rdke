@@ -4,16 +4,157 @@ import io
 import requests
 import xml.etree.ElementTree as ET
 import re
+import os
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
+class Logger:
+    LEVELS = {"debug": 10, "info": 20, "warn": 30, "error": 40}
+    def __init__(self, level="info"):
+        self.level = self.LEVELS.get(level, 20)
+    def debug(self, msg):
+        if self.level <= self.LEVELS["debug"]:
+            print(f"[DEBUG] {msg}")
+    def info(self, msg):
+        if self.level <= self.LEVELS["info"]:
+            print(f"[INFO] {msg}")
+    def warn(self, msg):
+        if self.level <= self.LEVELS["warn"]:
+            print(f"[WARN] {msg}")
+    def error(self, msg):
+        if self.level <= self.LEVELS["error"]:
+            print(f"[ERROR] {msg}")
+
+
+# Default configurations.
+MLPREFIX = "lib32-"
+GITHUB_API_TOKEN = os.environ.get("GITHUB_API_TOKEN", "")
+log = Logger(os.environ.get("LOG_LEVEL", "debug"))
+# Number of threads for parallel hyperlinking
+def get_default_num_threads():
+    try:
+        log.debug(f"os.cpu_count() returned: {os.cpu_count()}")
+        return os.cpu_count() or 4
+    except Exception:
+        log.debug("os.cpu_count() returned None or caused an exception, defaulting to 4 threads.")
+        return 4
+NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
+
+# Optionally use GitHub API token for requests
+def github_tag_exists(org, repo, tag):
+    headers = {}
+    if GITHUB_API_TOKEN:
+        headers['Authorization'] = f'token {GITHUB_API_TOKEN}'
+    url = f"https://api.github.com/repos/{org}/{repo}/releases/tags/{tag}"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        return True
+    if resp.status_code in (403, 429):
+        log.error("GitHub API rate limit exceeded or access forbidden. Please set GITHUB_API_TOKEN or try again later.")
+        sys.exit(1)
+    # If not found in releases, check tags endpoint
+    url = f"https://api.github.com/repos/{org}/{repo}/tags"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        tags = [t['name'] for t in resp.json()]
+        return tag in tags
+    if resp.status_code in (403, 429):
+        log.error("GitHub API rate limit exceeded or access forbidden. Please set GITHUB_API_TOKEN or try again later.")
+        return False
+    return False
+
+# Hyperlink package versions in MiddlewarePackagesAndVersions.md
+def parse_component_urls_conf(conf_path):
+    url_map = {}
+    with io.open(conf_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                k, v = line.split('=', 1)
+                url_map[k.strip()] = v.strip()
+    return url_map
+
+def hyperlink_constructor(base_url, version):
+    # Simple tarball or ipk
+    if base_url.endswith(('.tar.gz', '.tar.xz', '.tar.bz2', '.ipk')):
+        return f'[{version} (artifact)]({base_url})'
+    # For GitHub repo
+    if 'github.com' in base_url:
+        repo_match = re.match(r'https://github.com/([^/]+)/([^/]+)', base_url)
+        if repo_match:
+            org, repo = repo_match.groups()
+            # Trim -r... suffix from version for tag
+            trimmed_version = re.sub(r'-r\d+$', '', version)
+            trimmed_version = re.sub(r'([_\w\d]+)-r\d+$', r'\1', trimmed_version)
+            trimmed_version = re.sub(r'-r\d+$', '', trimmed_version)
+            log.debug(f"Checking GitHub tag for {repo}: {trimmed_version}")
+            if github_tag_exists(org, repo, trimmed_version):
+                log.info(f"Valid tag found for {repo}: {trimmed_version}")
+                return f'[{trimmed_version}](https://github.com/{org}/{repo}/releases/tag/{trimmed_version})'
+            else:
+                log.warn(f"No valid tag for {repo}: {trimmed_version}, leaving as plain text.")
+                return trimmed_version
+    # For code.rdkcentral.com
+    if 'code.rdkcentral.com' in base_url:
+        return f'[{version}]({base_url}/+/{version})'
+    # For meta layer hosted files, no link
+    if 'MetaLayerHostedFiles' in base_url:
+        return f'{version} (layer hosted)'
+    # Default: just link to base_url
+    return f'[{version}]({base_url})'
+
+def update_package_versions_md(md_path, url_map):
+    with io.open(md_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    jobs = []
+    for idx, line in enumerate(lines):
+        # Skip lines that already contain a Markdown hyperlink
+        if re.search(r'\[[^\]]+\]\([^\)]+\)', line):
+            log.warn(f"Skipping line {idx} as it already contains a hyperlink.")
+            continue
+        m = re.match(r'\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|', line)
+        if m:
+            pkg, ver = m.group(1).strip(), m.group(2).strip()
+            comp_name = pkg.replace(MLPREFIX, '')
+            base_url = url_map.get(comp_name)
+            if base_url and ver:
+                jobs.append((idx, pkg, ver, base_url))
+    # Run hyperlink_constructor in parallel
+    results = {}
+    with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
+        future_to_idx = {
+            executor.submit(hyperlink_constructor, base_url, ver): (idx, pkg, ver, base_url)
+            for idx, pkg, ver, base_url in jobs
+        }
+        for future in as_completed(future_to_idx):
+            idx, pkg, ver, base_url = future_to_idx[future]
+            try:
+                link = future.result()
+                results[idx] = f'| {pkg} | {link} |\n'
+            except Exception as e:
+                log.error(f"Error hyperlinking {pkg}: {e}")
+                results[idx] = lines[idx]  # fallback to original line
+    # Build new lines
+    new_lines = []
+    for idx, line in enumerate(lines):
+        if idx in results:
+            new_lines.append(results[idx])
+        else:
+            new_lines.append(line)
+    with io.open(md_path, 'w', encoding='utf-8') as f:
+        f.writelines(new_lines)
 
 # Remove XML comments to avoid parsing commented or disabled sections
 COMMENT_RE = re.compile(r'<!--.*?-->', re.DOTALL)
 
 
 def fetch_manifest_xml(manifest_url):
+    log.debug(f"Fetching manifest XML: {manifest_url}")
     resp = requests.get(manifest_url)
     if resp.status_code != 200:
-        print("Failed to fetch manifest XML from {}".format(manifest_url))
+        log.error(f"Failed to fetch manifest XML from {manifest_url}")
         sys.exit(1)
     return resp.text
 
@@ -91,6 +232,7 @@ def main():
     # Read release_information.conf for manifest info
     conf_path = "Tools/release_information.conf"
     release_info = {}
+    log.info(f"Reading release information from {conf_path}")
     with io.open(conf_path, 'r', encoding='utf-8') as conf_file:
         for line in conf_file:
             line = line.strip()
@@ -106,12 +248,12 @@ def main():
         if not release_info.get(var, "").strip():
             missing_vars.append(var)
     if missing_vars:
-        print(f"Error: The following required variables are missing or empty in Tools/release_information.conf: {', '.join(missing_vars)}")
+        log.error(f"The following required variables are missing or empty in Tools/release_information.conf: {', '.join(missing_vars)}")
         sys.exit(1)
 
     if len(sys.argv) not in (5, 6):
-        print("Setup requirements (one time): pip install requests")
-        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
+        log.error("Setup requirements (one time): pip install requests")
+        log.error("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
         sys.exit(1)
 
     template_file = sys.argv[1]
@@ -212,6 +354,7 @@ def main():
     from datetime import datetime, timezone
     gen_date = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
 
+    log.info(f"Reading template file: {template_file}")
     with io.open(template_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
@@ -254,7 +397,13 @@ def main():
 
     with io.open(output_file, 'w', encoding='utf-8') as f:
         f.write(content)
-    print("Updated README written to {}".format(output_file))
+    log.info(f"Updated README written to {output_file}")
+
+    # --- Hyperlink package versions in MiddlewarePackagesAndVersions.md ---
+    log.info("Updating MiddlewarePackagesAndVersions.md with hyperlinks.")
+    url_map = parse_component_urls_conf("Tools/component_urls.conf")
+    update_package_versions_md("MiddlewarePackagesAndVersions.md", url_map)
+    log.info("Updated MiddlewarePackagesAndVersions.md with hyperlinks.")
 
 if __name__ == "__main__":
     main()
