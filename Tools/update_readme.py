@@ -5,7 +5,7 @@ import requests
 import xml.etree.ElementTree as ET
 import re
 import os
-import json
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class Logger:
@@ -29,7 +29,9 @@ class Logger:
 # Default configurations.
 MLPREFIX = "lib32-"
 GITHUB_API_TOKEN = os.environ.get("GITHUB_API_TOKEN", "")
-log = Logger(os.environ.get("LOG_LEVEL", "debug"))
+# Change to "debug" or "info" for more verbose logging
+log = Logger(os.environ.get("LOG_LEVEL", "warn"))
+
 # Number of threads for parallel hyperlinking
 def get_default_num_threads():
     try:
@@ -40,7 +42,7 @@ def get_default_num_threads():
         return 4
 NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
 
-# Optionally use GitHub API token for requests
+# Check if a GitHub tag exists using GitHub API and return True/False
 def github_tag_exists(org, repo, tag):
     headers = {}
     if GITHUB_API_TOKEN:
@@ -50,7 +52,7 @@ def github_tag_exists(org, repo, tag):
     if resp.status_code == 200:
         return True
     if resp.status_code in (403, 429):
-        log.error("GitHub API rate limit exceeded or access forbidden. Please set GITHUB_API_TOKEN or try again later.")
+        log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
         sys.exit(1)
     # If not found in releases, check tags endpoint
     url = f"https://api.github.com/repos/{org}/{repo}/tags"
@@ -59,21 +61,26 @@ def github_tag_exists(org, repo, tag):
         tags = [t['name'] for t in resp.json()]
         return tag in tags
     if resp.status_code in (403, 429):
-        log.error("GitHub API rate limit exceeded or access forbidden. Please set GITHUB_API_TOKEN or try again later.")
+        log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
         return False
     return False
 
-# Hyperlink package versions in MiddlewarePackagesAndVersions.md
+# Hyperlink package versions in PackagesAndVersions.md
+# throw error if required files are not accessible or missing
 def parse_component_urls_conf(conf_path):
     url_map = {}
-    with io.open(conf_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            if '=' in line:
-                k, v = line.split('=', 1)
-                url_map[k.strip()] = v.strip()
+    try:
+        with io.open(conf_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    k, v = line.split('=', 1)
+                    url_map[k.strip()] = v.strip()
+    except Exception as e:
+        log.error(f"Error reading {conf_path}: {e}")
+        sys.exit(1)
     return url_map
 
 def hyperlink_constructor(base_url, version):
@@ -96,18 +103,26 @@ def hyperlink_constructor(base_url, version):
             else:
                 log.warn(f"No valid tag for {repo}: {trimmed_version}, leaving as plain text.")
                 return trimmed_version
-    # For code.rdkcentral.com
+    # TODO: Implement for code.rdkcentral.com hosted repos
     if 'code.rdkcentral.com' in base_url:
+        log.warn(f"Hyperlinking to code.rdkcentral.com not supported in this version of the script.")
         return f'[{version}]({base_url}/+/{version})'
     # For meta layer hosted files, no link
     if 'MetaLayerHostedFiles' in base_url:
-        return f'{version} (layer hosted)'
+        if '(layer hosted)' in version:
+            return version
+        else:
+            return f'{version} (layer hosted)'
     # Default: just link to base_url
     return f'[{version}]({base_url})'
 
 def update_package_versions_md(md_path, url_map):
-    with io.open(md_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+    try:
+        with io.open(md_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except Exception as e:
+        log.error(f"Error reading {md_path}: {e}")
+        sys.exit(1)
     jobs = []
     for idx, line in enumerate(lines):
         # Skip lines that already contain a Markdown hyperlink
@@ -124,10 +139,11 @@ def update_package_versions_md(md_path, url_map):
     # Run hyperlink_constructor in parallel
     results = {}
     with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
-        future_to_idx = {
-            executor.submit(hyperlink_constructor, base_url, ver): (idx, pkg, ver, base_url)
-            for idx, pkg, ver, base_url in jobs
-        }
+        future_to_idx = {}
+        for idx, pkg, ver, base_url in jobs:
+            future = executor.submit(hyperlink_constructor, base_url, ver)
+            future_to_idx[future] = (idx, pkg, ver, base_url)
+            time.sleep(0.02)  # 20ms delay between thread starts
         for future in as_completed(future_to_idx):
             idx, pkg, ver, base_url = future_to_idx[future]
             try:
@@ -149,7 +165,6 @@ def update_package_versions_md(md_path, url_map):
 # Remove XML comments to avoid parsing commented or disabled sections
 COMMENT_RE = re.compile(r'<!--.*?-->', re.DOTALL)
 
-
 def fetch_manifest_xml(manifest_url):
     log.debug(f"Fetching manifest XML: {manifest_url}")
     resp = requests.get(manifest_url)
@@ -157,7 +172,6 @@ def fetch_manifest_xml(manifest_url):
         log.error(f"Failed to fetch manifest XML from {manifest_url}")
         sys.exit(1)
     return resp.text
-
 
 def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None, remote_table=None, project_table=None):
     # Remove XML comments
@@ -227,8 +241,9 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
 
     return remote_table, project_table
 
-
 def main():
+    start_time = time.time()
+
     # Read release_information.conf for manifest info
     conf_path = "Tools/release_information.conf"
     release_info = {}
@@ -262,18 +277,6 @@ def main():
     test_report_url = sys.argv[4]
     feature_list_url = sys.argv[5] if len(sys.argv) == 6 else ''
     feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
-
-    # Read release_information.conf for manifest info
-    conf_path = "Tools/release_information.conf"
-    release_info = {}
-    with io.open(conf_path, 'r', encoding='utf-8') as conf_file:
-        for line in conf_file:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            if '=' in line:
-                k, v = line.split('=', 1)
-                release_info[k.strip()] = v.strip()
 
     base_url = release_info.get('MANIFEST_REPO_BASE_URL', '')
     original_base_url = base_url
@@ -369,6 +372,7 @@ def main():
             break
 
     # Fill test report line if provided
+    test_report_line = ''
     if test_report_url:
         test_report_line = f"Test Report: [{test_report_url}]({test_report_url})"
 
@@ -399,11 +403,12 @@ def main():
         f.write(content)
     log.info(f"Updated README written to {output_file}")
 
-    # --- Hyperlink package versions in MiddlewarePackagesAndVersions.md ---
-    log.info("Updating MiddlewarePackagesAndVersions.md with hyperlinks.")
+    # --- Hyperlink package versions in PackagesAndVersions.md ---
+    log.info(f"Updating {rdke_layer}PackagesAndVersions.md with hyperlinks.")
     url_map = parse_component_urls_conf("Tools/component_urls.conf")
-    update_package_versions_md("MiddlewarePackagesAndVersions.md", url_map)
-    log.info("Updated MiddlewarePackagesAndVersions.md with hyperlinks.")
+    update_package_versions_md(f"{rdke_layer}PackagesAndVersions.md", url_map)
+    log.info(f"Updated {rdke_layer}PackagesAndVersions.md with hyperlinks.")
+    print("Finished in {:.2f} seconds".format(time.time() - start_time))
 
 if __name__ == "__main__":
     main()

@@ -6,7 +6,7 @@
 | Manifest URL  | https://github.com/rdkcentral/middleware-manifest-rdke |
 | Release Tag   | [2.16.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/2.16.0) |
 | Yocto Version | Kirkstone |
-| Date          | 2025-07-24 17:30:57 UTC |
+| Date          | 2025-09-09 00:46:32 UTC |
 | Author        | support@rdkcentral.com |
 
 
@@ -37,7 +37,7 @@ For a comprehensive list of changes, updates, and release history, refer to the 
 
 The [packages and versions](MiddlewarePackagesAndVersions.md) file provides the list of packages in this Middleware release.
 
-List of features: Upcoming
+
 
 Test Report: [Upcoming test report url](Upcoming test report url)
 
