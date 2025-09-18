@@ -393,7 +393,7 @@ def main():
     # Fill test report line if provided
     test_report_line = ''
     if test_report_url:
-        test_report_line = f"Test Report: [{test_report_url}]({test_report_url})"
+        test_report_line = f"Release Details: [{test_report_url}]({test_report_url})"
 
     # Set PACKAGE_LIST_LINE only for Vendor, Middleware, or Application layers
     if rdke_layer in ["Vendor", "Middleware", "Application"]:
