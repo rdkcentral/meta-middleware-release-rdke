@@ -1,22 +1,196 @@
+##########################################################################
+# If not stated otherwise in this file or this component's LICENSE
+# file the following copyright and licenses apply:
+#
+# Copyright 2025 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##########################################################################
+
 from __future__ import print_function
 import sys
 import io
 import requests
 import xml.etree.ElementTree as ET
 import re
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
+class Logger:
+    LEVELS = {"debug": 10, "info": 20, "warn": 30, "error": 40}
+    def __init__(self, level="info"):
+        self.level = self.LEVELS.get(level, 20)
+    def debug(self, msg):
+        if self.level <= self.LEVELS["debug"]:
+            print(f"[DEBUG] {msg}")
+    def info(self, msg):
+        if self.level <= self.LEVELS["info"]:
+            print(f"[INFO] {msg}")
+    def warn(self, msg):
+        if self.level <= self.LEVELS["warn"]:
+            print(f"[WARN] {msg}")
+    def error(self, msg):
+        if self.level <= self.LEVELS["error"]:
+            print(f"[ERROR] {msg}")
+
+
+# Default configurations.
+MLPREFIX = "lib32-"
+GITHUB_API_TOKEN = os.environ.get("GITHUB_API_TOKEN", "")
+# Change to "debug" or "info" for more verbose logging
+log = Logger(os.environ.get("LOG_LEVEL", "warn"))
+
+# Number of threads for parallel hyperlinking
+def get_default_num_threads():
+    try:
+        log.debug(f"os.cpu_count() returned: {os.cpu_count()}")
+        return os.cpu_count() or 4
+    except Exception:
+        log.debug("os.cpu_count() returned None or caused an exception, defaulting to 4 threads.")
+        return 4
+NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
+
+# Check if a GitHub tag exists using GitHub API and return True/False
+def github_tag_exists(org, repo, tag):
+    headers = {}
+    if GITHUB_API_TOKEN:
+        headers['Authorization'] = f'token {GITHUB_API_TOKEN}'
+    url = f"https://api.github.com/repos/{org}/{repo}/releases/tags/{tag}"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        return True
+    if resp.status_code in (403, 429):
+        log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
+        sys.exit(1)
+    # If not found in releases, check tags endpoint
+    url = f"https://api.github.com/repos/{org}/{repo}/tags"
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        tags = [t['name'] for t in resp.json()]
+        return tag in tags
+    if resp.status_code in (403, 429):
+        log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
+        return False
+    return False
+
+# Hyperlink package versions in PackagesAndVersions.md
+# throw error if required files are not accessible or missing
+def parse_component_urls_conf(conf_path):
+    url_map = {}
+    try:
+        with io.open(conf_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    k, v = line.split('=', 1)
+                    url_map[k.strip()] = v.strip()
+    except Exception as e:
+        log.error(f"Error reading {conf_path}: {e}")
+        sys.exit(1)
+    return url_map
+
+def hyperlink_constructor(base_url, version):
+    # Simple tarball or ipk
+    if base_url.endswith(('.tar.gz', '.tar.xz', '.tar.bz2', '.ipk')):
+        return f'[{version} (artifact)]({base_url})'
+    # For GitHub repo
+    if 'github.com' in base_url:
+        repo_match = re.match(r'https://github.com/([^/]+)/([^/]+)', base_url)
+        if repo_match:
+            org, repo = repo_match.groups()
+            # Trim -r... suffix from version for tag
+            trimmed_version = re.sub(r'-r\d+$', '', version)
+            trimmed_version = re.sub(r'([_\w\d]+)-r\d+$', r'\1', trimmed_version)
+            trimmed_version = re.sub(r'-r\d+$', '', trimmed_version)
+            log.debug(f"Checking GitHub tag for {repo}: {trimmed_version}")
+            if github_tag_exists(org, repo, trimmed_version):
+                log.info(f"Valid tag found for {repo}: {trimmed_version}")
+                return f'[{trimmed_version}](https://github.com/{org}/{repo}/releases/tag/{trimmed_version})'
+            else:
+                log.warn(f"No valid tag for {repo}: {trimmed_version}, leaving as plain text.")
+                return trimmed_version
+    # TODO: Implement for code.rdkcentral.com hosted repos
+    if 'code.rdkcentral.com' in base_url:
+        log.warn(f"Hyperlinking to code.rdkcentral.com not supported in this version of the script.")
+        return f'[{version}]({base_url}/+/{version})'
+    # For meta layer hosted files, no link
+    if 'MetaLayerHostedFiles' in base_url:
+        if '(layer hosted)' in version:
+            return version
+        else:
+            return f'{version} (layer hosted)'
+    # Default: just link to base_url
+    return f'[{version}]({base_url})'
+
+def update_package_versions_md(md_path, url_map):
+    try:
+        with io.open(md_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except Exception as e:
+        log.error(f"Error reading {md_path}: {e}")
+        sys.exit(1)
+    jobs = []
+    for idx, line in enumerate(lines):
+        # Skip lines that already contain a Markdown hyperlink
+        if re.search(r'\[[^\]]+\]\([^\)]+\)', line):
+            log.warn(f"Skipping line {idx} as it already contains a hyperlink.")
+            continue
+        m = re.match(r'\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|', line)
+        if m:
+            pkg, ver = m.group(1).strip(), m.group(2).strip()
+            comp_name = pkg.replace(MLPREFIX, '')
+            base_url = url_map.get(comp_name)
+            if base_url and ver:
+                jobs.append((idx, pkg, ver, base_url))
+    # Run hyperlink_constructor in parallel
+    results = {}
+    with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
+        future_to_idx = {}
+        for idx, pkg, ver, base_url in jobs:
+            future = executor.submit(hyperlink_constructor, base_url, ver)
+            future_to_idx[future] = (idx, pkg, ver, base_url)
+            time.sleep(0.02)  # 20ms delay between thread starts
+        for future in as_completed(future_to_idx):
+            idx, pkg, ver, base_url = future_to_idx[future]
+            try:
+                link = future.result()
+                results[idx] = f'| {pkg} | {link} |\n'
+            except Exception as e:
+                log.error(f"Error hyperlinking {pkg}: {e}")
+                results[idx] = lines[idx]  # fallback to original line
+    # Build new lines
+    new_lines = []
+    for idx, line in enumerate(lines):
+        if idx in results:
+            new_lines.append(results[idx])
+        else:
+            new_lines.append(line)
+    with io.open(md_path, 'w', encoding='utf-8') as f:
+        f.writelines(new_lines)
 
 # Remove XML comments to avoid parsing commented or disabled sections
 COMMENT_RE = re.compile(r'<!--.*?-->', re.DOTALL)
 
-
 def fetch_manifest_xml(manifest_url):
+    log.debug(f"Fetching manifest XML: {manifest_url}")
     resp = requests.get(manifest_url)
     if resp.status_code != 200:
-        print("Failed to fetch manifest XML from {}".format(manifest_url))
+        log.error(f"Failed to fetch manifest XML from {manifest_url}")
         sys.exit(1)
     return resp.text
-
 
 def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None, remote_table=None, project_table=None):
     # Remove XML comments
@@ -86,26 +260,50 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
 
     return remote_table, project_table
 
-
 def main():
-    if len(sys.argv) not in (9, 10):
-        print("Setup requirements (one time): pip install requests")
-        print("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md <MANIFEST_REPO_BASE_URL> <MANIFEST_NAME> <RELEASE_VERSION> <RDKE_LAYER> \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
+    start_time = time.time()
+
+    # Read release_information.conf for manifest info
+    conf_path = "Tools/release_information.conf"
+    release_info = {}
+    log.info(f"Reading release information from {conf_path}")
+    with io.open(conf_path, 'r', encoding='utf-8') as conf_file:
+        for line in conf_file:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                k, v = line.split('=', 1)
+                release_info[k.strip()] = v.strip()
+
+    # Check required variables
+    missing_vars = []
+    for var in ["MANIFEST_REPO_BASE_URL", "MANIFEST_NAME", "RELEASE_VERSION", "RDKE_LAYER"]:
+        if not release_info.get(var, "").strip():
+            missing_vars.append(var)
+    if missing_vars:
+        log.error(f"The following required variables are missing or empty in Tools/release_information.conf: {', '.join(missing_vars)}")
+        sys.exit(1)
+
+    if len(sys.argv) not in (5, 6):
+        log.error("Setup requirements (one time): pip install requests")
+        log.error("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
         sys.exit(1)
 
     template_file = sys.argv[1]
     output_file = sys.argv[2]
-    base_url = sys.argv[3]
+    author = sys.argv[3]
+    test_report_url = sys.argv[4]
+    feature_list_url = sys.argv[5] if len(sys.argv) == 6 else ''
+    feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
+
+    base_url = release_info.get('MANIFEST_REPO_BASE_URL', '')
     original_base_url = base_url
-    manifest_name = sys.argv[4]
+    manifest_name = release_info.get('MANIFEST_NAME', '')
     if not manifest_name.endswith('.xml'):
         manifest_name += '.xml'
-    release_version = sys.argv[5]
-    rdke_layer = sys.argv[6]
-    author = sys.argv[7]
-    test_report_url = sys.argv[8]
-    feature_list_url = sys.argv[9] if len(sys.argv) == 10 else ''
-    feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
+    release_version = release_info.get('RELEASE_VERSION', '')
+    rdke_layer = release_info.get('RDKE_LAYER', '')
 
     # Only convert to raw.githubusercontent.com for fetching manifests, not for README links
     fetch_base_url = base_url
@@ -178,6 +376,7 @@ def main():
     from datetime import datetime, timezone
     gen_date = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
 
+    log.info(f"Reading template file: {template_file}")
     with io.open(template_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
@@ -192,8 +391,9 @@ def main():
             break
 
     # Fill test report line if provided
+    test_report_line = ''
     if test_report_url:
-        test_report_line = f"Test Report: [{test_report_url}]({test_report_url})"
+        test_report_line = f"Release Details: [{test_report_url}]({test_report_url})"
 
     # Set PACKAGE_LIST_LINE only for Vendor, Middleware, or Application layers
     if rdke_layer in ["Vendor", "Middleware", "Application"]:
@@ -220,7 +420,14 @@ def main():
 
     with io.open(output_file, 'w', encoding='utf-8') as f:
         f.write(content)
-    print("Updated README written to {}".format(output_file))
+    log.info(f"Updated README written to {output_file}")
+
+    # --- Hyperlink package versions in PackagesAndVersions.md ---
+    log.info(f"Updating {rdke_layer}PackagesAndVersions.md with hyperlinks.")
+    url_map = parse_component_urls_conf("Tools/component_urls.conf")
+    update_package_versions_md(f"{rdke_layer}PackagesAndVersions.md", url_map)
+    log.info(f"Updated {rdke_layer}PackagesAndVersions.md with hyperlinks.")
+    print("Finished in {:.2f} seconds".format(time.time() - start_time))
 
 if __name__ == "__main__":
     main()
