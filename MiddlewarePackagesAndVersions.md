@@ -29,7 +29,7 @@
 | lib32-entservices-casting | [1.2.6](https://github.com/rdkcentral/entservices-casting/releases/tag/1.2.6) |
 | lib32-entservices-connectivity | [1.1.0](https://github.com/rdkcentral/entservices-connectivity/releases/tag/1.1.0) |
 | lib32-entservices-deviceanddisplay | [3.1.17](https://github.com/rdkcentral/entservices-deviceanddisplay/releases/tag/3.1.17) |
-| lib32-entservices-infra | [1.7.18](https://github.com/rdkcentral/entservices-infra/releases/tag/1.7.18) |
+| lib32-entservices-infra | 1.7.18 |
 | lib32-entservices-inputoutput | [1.4.7](https://github.com/rdkcentral/entservices-inputoutput/releases/tag/1.4.7) |
 | lib32-entservices-lisa | 1.0.0 |
 | lib32-entservices-mediaanddrm | [1.3.6](https://github.com/rdkcentral/entservices-mediaanddrm/releases/tag/1.3.6) |

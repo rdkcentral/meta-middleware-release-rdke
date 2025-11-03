@@ -1,17 +1,17 @@
 
-# RDKE Middleware Layer 8.3.4.0 Release Note
+# RDKE Middleware Layer 8.3.4.1 Release Note
 
 | Summary       | Content |
 |---------------|---------|
 | Manifest URL  | https://github.com/rdkcentral/middleware-manifest-rdke |
-| Release Tag   | [8.3.4.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.3.4.0) |
+| Release Tag   | [8.3.4.1](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.3.4.1) |
 | Yocto Version | Kirkstone |
-| Date          | 2025-10-15 16:02:35 UTC |
+| Date          | 2025-11-03 16:20:11 UTC |
 | Author        | support@rdkcentral.com |
 
 
 ### Middleware Release Details
-[Middleware Release 8.3.4.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.3.4.0) has the below enlisted layer combination.
+[Middleware Release 8.3.4.1](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.3.4.1) has the below enlisted layer combination.
 
 | Layer Name | Current Revision/Tag |
 |------------|-------------------|
@@ -31,7 +31,7 @@
 | meta-rdk-halif-headers | [3.0.2](https://github.com/rdkcentral/meta-rdk-halif-headers/tree/3.0.2) |
 | meta-middleware-generic-support | [1.11.0](https://github.com/rdkcentral/meta-middleware-generic-support/tree/1.11.0) |
 | meta-rdk | [1.11.0](https://github.com/rdkcentral/meta-rdk/tree/1.11.0) |
-| meta-rdk-video | [1.11.0](https://github.com/rdkcentral/meta-rdk-video/tree/1.11.0) |
+| meta-rdk-video | [1.11.0-community](https://github.com/rdkcentral/meta-rdk-video/tree/1.11.0-community) |
 
 For a comprehensive list of changes, updates, and release history, refer to the [Changelog](CHANGELOG.md).
 
@@ -39,9 +39,9 @@ The [packages and versions](MiddlewarePackagesAndVersions.md) file provides the 
 
 
 
-Release Details: [https://wiki.rdkcentral.com/display/RDKM/8.3.4.0+-+Release+Notes](https://wiki.rdkcentral.com/display/RDKM/8.3.4.0+-+Release+Notes)
+Release Details: [https://wiki.rdkcentral.com/spaces/RDKM/pages/433966887/8.3.4.1+-+Q3+Hotfix+-+Release+Notes](https://wiki.rdkcentral.com/spaces/RDKM/pages/433966887/8.3.4.1+-+Q3+Hotfix+-+Release+Notes)
 
-For RDKE Middleware layer specific build instructions, refer [this](https://github.com/rdkcentral/middleware-manifest-rdke/blob/8.3.4.0/README.md)
+For RDKE Middleware layer specific build instructions, refer [this](https://github.com/rdkcentral/middleware-manifest-rdke/blob/8.3.4.1/README.md)
 
 ## License Details
 This project is distributed under the terms outlined in the associated [License](LICENSE) and [Notice](NOTICE) files. Please review these files for detailed information.
