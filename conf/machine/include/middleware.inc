@@ -1,16 +1,35 @@
 # To support layered ipk generation
 
-DISTRO = "rdk"
-
-MIDDLEWARE_ARCH = "${MACHINE}-middleware"
-PACKAGE_EXTRA_ARCHS:append = " ${MIDDLEWARE_ARCH}"
-
 # See release note for configuration details.
 RDK_ARTIFACTS_BASE_URL ?= ""
 
+DISTRO = "rdk"
+
+MIDDLEWARE_EXTENSION = "-middleware"
+
+# Middleware IPK configuration
+
 RELEASE_NUM = "8.5.1.0"
-MW_IPK_PATH = "middleware-release/${RELEASE_NUM}/${MACHINE}/ipks/debug"
+MIDDLEWARE_ARCH = "${MACHINE}${MIDDLEWARE_EXTENSION}"
+PACKAGE_EXTRA_ARCHS:append = " ${MIDDLEWARE_ARCH}"
+OPKG_ARCH_PRIORITY:${MIDDLEWARE_ARCH} = "205"
+
+MW_IPK_PATH ?= "${MIDDLEWARE_ARCH}/${MIDDLEWARE_LAYER_VERSION}/ipks/${BUILD_VARIANT}"
 MW_IPK_SERVER_PATH ?= "${RDK_ARTIFACTS_BASE_URL}/${MW_IPK_PATH}"
 
 IPK_FEED_URIS += " \
                 ${MIDDLEWARE_ARCH}##${MW_IPK_SERVER_PATH} "
+
+# Middleware OSS IPK configuration
+
+OSS_LAYER_VERSION = "4.10.0"
+MIDDLEWARE_OSS = "${@get_oss_arch(d)}${MIDDLEWARE_EXTENSION}"
+PACKAGE_EXTRA_ARCHS:append = "${@ '' if '${MIDDLEWARE_OSS}' == '${OSS_LAYER_ARCH}' else ' ${MIDDLEWARE_OSS}'}"
+OPKG_ARCH_PRIORITY:${MIDDLEWARE_OSS} = "210"
+OSS_MACHINE = "${@get_oss_machine(d)}"
+
+MW_OSS_IPK_PATH ?= "${MIDDLEWARE_OSS}/${OSS_LAYER_VERSION}/ipks/"
+MW_OSS_IPK_SERVER_PATH ?= "${RDK_ARTIFACTS_BASE_URL}/${MW_OSS_IPK_PATH}"
+
+IPK_FEED_URIS += " \
+                ${MIDDLEWARE_OSS}##${MW_OSS_IPK_SERVER_PATH} "
