@@ -8,12 +8,12 @@
 | lib32-bluetooth-core | [1.0.9](https://github.com/rdkcentral/bluetooth/releases/tag/1.0.9) |
 | lib32-bluetooth-mgr | [1.0.9](https://github.com/rdkcentral/bluetooth_mgr/releases/tag/1.0.9) |
 | lib32-bluez5 | [5.48-r5 (artifact)](https://cdn.kernel.org/pub/linux/bluetooth/bluez-5.48.tar.xz) |
-| lib32-bluez5-doc | [5.48-r5 (artifact)](https://cdn.kernel.org/pub/linux/bluetooth/bluez-5.48.tar.xz) |
-| lib32-bluez5-noinst-tools | [5.48-r5 (artifact)](https://cdn.kernel.org/pub/linux/bluetooth/bluez-5.48.tar.xz) |
-| lib32-bluez5-obex | [5.48-r5 (artifact)](https://cdn.kernel.org/pub/linux/bluetooth/bluez-5.48.tar.xz) |
+| lib32-bluez5-doc | 5.48-r5 |
+| lib32-bluez5-noinst-tools | 5.48-r5 |
+| lib32-bluez5-obex | 5.48-r5 |
 | lib32-bootversion-loader | 1.0-r0 (layer hosted) |
-| lib32-chrony | [4.2-r0 (artifact)](https://download.tuxfamily.org/chrony/chrony-4.2.tar.gz) |
-| lib32-chronyc | [4.2-r0 (artifact)](https://download.tuxfamily.org/chrony/chrony-4.2.tar.gz) |
+| lib32-chrony | 4.2-r0 |
+| lib32-chronyc | 4.2-r0 |
 | lib32-cjwt | 1.0 |
 | lib32-commonutilities | [1.5.3](https://github.com/rdkcentral/common_utilities/releases/tag/1.5.3) |
 | lib32-cpeabs | [2.0.0](https://github.com/xmidt-org/cpeabs/releases/tag/2.0.0) |
@@ -25,52 +25,52 @@
 | lib32-dobby | 3.16.2 |
 | lib32-dobby-thunderplugin | 3.16.2 |
 | lib32-dropbear | [2020.81-r0 (artifact)](http://matt.ucc.asn.au/dropbear/releases/dropbear-2020.81.tar.bz2) |
-| lib32-entservices-account | [1.0.2](https://github.com/rdkcentral/entservices-account/releases/tag/1.0.2) |
-| lib32-entservices-appgateway | [1.0.1.3](https://github.com/rdkcentral/entservices-appgateway/releases/tag/1.0.1.3) |
-| lib32-entservices-avinput | [1.0.4](https://github.com/rdkcentral/entservices-avinput/releases/tag/1.0.4) |
-| lib32-entservices-avoutput | [1.1.0](https://github.com/rdkcentral/entservices-avoutput/releases/tag/1.1.0) |
-| lib32-entservices-backupmanager | [1.0.1](https://github.com/rdkcentral/entservices-backupmanager/releases/tag/1.0.1) |
+| lib32-entservices-account | 1.0.2-r0 |
+| lib32-entservices-appgateway | 1.0.1.3-r0 |
+| lib32-entservices-avinput | 1.0.4-r0 |
+| lib32-entservices-avoutput | 1.1.0-r0 |
+| lib32-entservices-backupmanager | 1.0.1-r0 |
 | lib32-entservices-connectivity | [1.5.1](https://github.com/rdkcentral/entservices-connectivity/releases/tag/1.5.1) |
-| lib32-entservices-cryptography | [1.0.2](https://github.com/rdkcentral/entservices-cryptography/releases/tag/1.0.2) |
-| lib32-entservices-devicediagnostics | [1.2.2](https://github.com/rdkcentral/entservices-devicediagnostics/releases/tag/1.2.2) |
-| lib32-entservices-deviceinfo | [1.1.0](https://github.com/rdkcentral/entservices-deviceinfo/releases/tag/1.1.0) |
-| lib32-entservices-displayinfo | [1.1.2](https://github.com/rdkcentral/entservices-displayinfo/releases/tag/1.1.2) |
-| lib32-entservices-displaysettings | [1.1.0](https://github.com/rdkcentral/entservices-displaysettings/releases/tag/1.1.0) |
-| lib32-entservices-firmwaredownload | [1.0.1](https://github.com/rdkcentral/entservices-firmwaredownload/releases/tag/1.0.1) |
-| lib32-entservices-firmwareupdate | [1.2.0](https://github.com/rdkcentral/entservices-firmwareupdate/releases/tag/1.2.0) |
-| lib32-entservices-framerate | [1.1.2](https://github.com/rdkcentral/entservices-framerate/releases/tag/1.1.2) |
-| lib32-entservices-frontpanel | [1.0.2](https://github.com/rdkcentral/entservices-frontpanel/releases/tag/1.0.2) |
-| lib32-entservices-hdcpprofile | [1.0.5](https://github.com/rdkcentral/entservices-hdcpprofile/releases/tag/1.0.5) |
-| lib32-entservices-hdmicecsink | [1.0.5](https://github.com/rdkcentral/entservices-hdmicecsink/releases/tag/1.0.5) |
-| lib32-entservices-hdmicecsource | [1.0.5](https://github.com/rdkcentral/entservices-hdmicecsource/releases/tag/1.0.5) |
+| lib32-entservices-cryptography | 1.0.2-r0 |
+| lib32-entservices-devicediagnostics | 1.2.2-r0 |
+| lib32-entservices-deviceinfo | 1.1.0-r0 |
+| lib32-entservices-displayinfo | 1.1.2-r0 |
+| lib32-entservices-displaysettings | 1.1.0-r0 |
+| lib32-entservices-firmwaredownload | 1.0.1-r0 |
+| lib32-entservices-firmwareupdate | 1.2.0-r0 |
+| lib32-entservices-framerate | 1.1.2-r0 |
+| lib32-entservices-frontpanel | 1.0.2-r0 |
+| lib32-entservices-hdcpprofile | 1.0.5-r0 |
+| lib32-entservices-hdmicecsink | 1.0.5-r0 |
+| lib32-entservices-hdmicecsource | 1.0.5-r0 |
 | lib32-entservices-infra | [3.23.0](https://github.com/rdkcentral/entservices-infra/releases/tag/3.23.0) |
-| lib32-entservices-ledcontrol | [1.0.1](https://github.com/rdkcentral/entservices-ledcontrol/releases/tag/1.0.1) |
+| lib32-entservices-ledcontrol | 1.0.1-r0 |
 | lib32-entservices-mediaanddrm | [1.8.2](https://github.com/rdkcentral/entservices-mediaanddrm/releases/tag/1.8.2) |
-| lib32-entservices-messagecontrol | [1.0.3](https://github.com/rdkcentral/entservices-messagecontrol/releases/tag/1.0.3) |
-| lib32-entservices-migration | [1.0.4](https://github.com/rdkcentral/entservices-migration/releases/tag/1.0.4) |
-| lib32-entservices-miracast | [2.0.2](https://github.com/rdkcentral/entservices-miracast/releases/tag/2.0.2) |
-| lib32-entservices-monitor | [1.0.3](https://github.com/rdkcentral/entservices-monitor/releases/tag/1.0.3) |
-| lib32-entservices-ocicontainer | [1.0.3](https://github.com/rdkcentral/entservices-ocicontainer/releases/tag/1.0.3) |
-| lib32-entservices-opencdmi | [1.0.2](https://github.com/rdkcentral/entservices-opencdmi/releases/tag/1.0.2) |
+| lib32-entservices-messagecontrol | 1.0.3-r0 |
+| lib32-entservices-migration | 1.0.4-r0 |
+| lib32-entservices-miracast | 2.0.2-r0 |
+| lib32-entservices-monitor | 1.0.3-r0 |
+| lib32-entservices-ocicontainer | 1.0.3-r0 |
+| lib32-entservices-opencdmi | 1.0.2-r0 |
 | lib32-entservices-peripherals | [1.4.0](https://github.com/rdkcentral/entservices-peripherals/releases/tag/1.4.0) |
-| lib32-entservices-peripherals-test | [1.4.0](https://github.com/rdkcentral/entservices-peripherals/releases/tag/1.4.0) |
-| lib32-entservices-persistentstore | [1.0.3](https://github.com/rdkcentral/entservices-persistentstore/releases/tag/1.0.3) |
-| lib32-entservices-playerinfo | [1.0.3](https://github.com/rdkcentral/entservices-playerinfo/releases/tag/1.0.3) |
-| lib32-entservices-powermanager | [1.1.4](https://github.com/rdkcentral/entservices-powermanager/releases/tag/1.1.4) |
-| lib32-entservices-rdkappmanagers | 1.0 |
+| lib32-entservices-peripherals-test | 1.4.0-r0 |
+| lib32-entservices-persistentstore | 1.0.3-r0 |
+| lib32-entservices-playerinfo | 1.0.3-r0 |
+| lib32-entservices-powermanager | 1.1.4-r0 |
+| lib32-entservices-rdkappmanagers | 1.0-r0 |
 | lib32-entservices-runtime | [1.2.3](https://github.com/rdkcentral/entservices-runtime/releases/tag/1.2.3) |
-| lib32-entservices-screencapture | [1.0.3](https://github.com/rdkcentral/entservices-screencapture/releases/tag/1.0.3) |
-| lib32-entservices-sharedstorage | [1.0.4](https://github.com/rdkcentral/entservices-sharedstorage/releases/tag/1.0.4) |
+| lib32-entservices-screencapture | 1.0.3-r0 |
+| lib32-entservices-sharedstorage | 1.0.4-r0 |
 | lib32-entservices-softwareupdate | [1.10.0](https://github.com/rdkcentral/entservices-softwareupdate/releases/tag/1.10.0) |
-| lib32-entservices-systemmode | [1.1.0](https://github.com/rdkcentral/entservices-systemmode/releases/tag/1.1.0) |
-| lib32-entservices-systemservices | [1.1.3](https://github.com/rdkcentral/entservices-systemservices/releases/tag/1.1.3) |
-| lib32-entservices-telemetry | [1.0.4](https://github.com/rdkcentral/entservices-telemetry/releases/tag/1.0.4) |
-| lib32-entservices-usbdevice | [1.0.3](https://github.com/rdkcentral/entservices-usbdevice/releases/tag/1.0.3) |
-| lib32-entservices-usbmassstorage | [1.0.4](https://github.com/rdkcentral/entservices-usbmassstorage/releases/tag/1.0.4) |
-| lib32-entservices-userpreferences | [1.1.1](https://github.com/rdkcentral/entservices-userpreferences/releases/tag/1.1.1) |
-| lib32-entservices-usersettings | [1.0.6](https://github.com/rdkcentral/entservices-usersettings/releases/tag/1.0.6) |
-| lib32-entservices-warehouse | [1.0.4](https://github.com/rdkcentral/entservices-warehouse/releases/tag/1.0.4) |
-| lib32-entservices-xcast | [2.0.2](https://github.com/rdkcentral/entservices-xcast/releases/tag/2.0.2) |
+| lib32-entservices-systemmode | 1.1.0-r0 |
+| lib32-entservices-systemservices | 1.1.3-r0 |
+| lib32-entservices-telemetry | 1.0.4-r0 |
+| lib32-entservices-usbdevice | 1.0.3-r0 |
+| lib32-entservices-usbmassstorage | 1.0.4-r0 |
+| lib32-entservices-userpreferences | 1.1.1-r0 |
+| lib32-entservices-usersettings | 1.0.6-r0 |
+| lib32-entservices-warehouse | 1.0.4-r0 |
+| lib32-entservices-xcast | 2.0.2-r0 |
 | lib32-ermgr | [1.99-r0](https://code.rdkcentral.com/r/plugins/gitiles/rdk/components/generic/ermgr/+/1.99-r0) |
 | lib32-gst-plugins-rdk | 1.0.0 |
 | lib32-hdmicec | [1.0.10](https://github.com/rdkcentral/hdmicec/releases/tag/1.0.10) |
@@ -80,18 +80,18 @@
 | lib32-iarmbus | [1.0.3](https://github.com/rdkcentral/iarmbus/releases/tag/1.0.3) |
 | lib32-iarmmgrs | [1.1.13.1](https://github.com/rdkcentral/iarmmgrs/releases/tag/1.1.13.1) |
 | lib32-key-simulator | [1.0.8](https://github.com/rdkcentral/sys_mon_tools/releases/tag/1.0.8) |
-| lib32-libcimplog1.0.0 | 1.0 |
+| lib32-libcimplog1.0.0 | 1.0-r0 |
 | lib32-libocdmrialto1 | 0.10.0 |
-| lib32-libpackage1 | [1.2.3](https://github.com/rdkcentral/libpackage/releases/tag/1.2.3) |
+| lib32-libpackage1 | 1.2.3-r0 |
 | lib32-libparodus | 1.0 |
 | lib32-libprivilege0 | [1.0.2](https://github.com/rdkcentral/rdk-libunpriv/releases/tag/1.0.2) |
-| lib32-libralf1 | git |
-| lib32-librialtoclient1 | 0.19.0 |
-| lib32-librialtoservermanager1 | 0.19.0 |
+| lib32-libralf1 | git-r0 |
+| lib32-librialtoclient1 | 0.19.0-r0 |
+| lib32-librialtoservermanager1 | 0.19.0-r0 |
 | lib32-libsystimerfactory0 | [1.4.0](https://github.com/rdkcentral/systemtimemgr/releases/tag/1.4.0) |
 | lib32-libsyswrapper | 1.3.3 |
 | lib32-libwebconfig-framework0 | [1.0.0](https://github.com/rdkcentral/WebconfigFramework/releases/tag/1.0.0) |
-| lib32-libwpeframeworkdefinitions4 | 3.4.2 |
+| lib32-libwpeframeworkdefinitions4 | 3.4.2-r0 |
 | lib32-libxr-voice-sdk1 | [1.0.12](https://github.com/rdkcentral/xr-voice-sdk/releases/tag/1.0.12) |
 | lib32-media-utils | git |
 | lib32-memcr | 1.0.3 |
@@ -99,7 +99,7 @@
 | lib32-networkmanager-plugin | [v2.0.0](https://github.com/rdkcentral/networkmanager/releases/tag/v2.0.0) |
 | lib32-os-release | 1.0.0-r0 (layer hosted) |
 | lib32-packagemanager | 4.4.1 |
-| lib32-packager-headers | 1.3.0 |
+| lib32-packager-headers | 1.3.0-r0 |
 | lib32-parodus | 1.0 |
 | lib32-rbus | 2.12.0 |
 | lib32-rdk-gstreamer-utils | [2.0.2](https://github.com/rdkcentral/gstreamer-netflix-platform/releases/tag/2.0.2) |
@@ -109,24 +109,24 @@
 | lib32-rdkfwupgrader | [1.6.1](https://github.com/rdkcentral/rdkfwupdater/releases/tag/1.6.1) |
 | lib32-rdksysctl | 1.0-r0 (layer hosted) |
 | lib32-rdkversion | 1.0.0 |
-| lib32-rdkwindowmanager | [0.3.0.0](https://github.com/rdkcentral/rdk-window-manager/releases/tag/0.3.0.0) |
+| lib32-rdkwindowmanager | 0.3.0.0-r0 |
 | lib32-rdkwpasupplicantconfig | 1.0.0-r0 (layer hosted) |
 | lib32-rdmagent | [2.1.3](https://github.com/rdkcentral/rdm-agent/releases/tag/2.1.3) |
 | lib32-remotedebugger | [1.2.9](https://github.com/rdkcentral/remote_debugger/releases/tag/1.2.9) |
 | lib32-rfc | [1.2.1](https://github.com/rdkcentral/rfc/releases/tag/1.2.1) |
 | lib32-rialto-gstreamer | 0.17.0 |
-| lib32-rialto-server | 0.19.0 |
-| lib32-rialto-servermanager | 0.19.0 |
+| lib32-rialto-server | 0.19.0-r0 |
+| lib32-rialto-servermanager | 0.19.0-r0 |
 | lib32-rtcore | 1.0.1 |
 | lib32-rtremote | 2.0.0 |
-| lib32-sceneset | [0.3.0](https://github.com/rdkcentral/sceneset/releases/tag/0.3.0) |
+| lib32-sceneset | 0.3.0-r0 |
 | lib32-sysint | [4.5.2v2](https://github.com/rdkcentral/sysint/releases/tag/4.5.2v2) |
 | lib32-systimemgr | [1.5.1](https://github.com/rdkcentral/systemtimemgr/releases/tag/1.5.1) |
 | lib32-systimemgrinetrface | [1.4.0](https://github.com/rdkcentral/systemtimemgr/releases/tag/1.4.0) |
 | lib32-telemetry | [1.8.5](https://github.com/rdkcentral/telemetry/releases/tag/1.8.5) |
 | lib32-tenablehdcp | [1.99-r0](https://code.rdkcentral.com/r/plugins/gitiles/rdk/components/generic/rmf_tools/tenableHDCP/+/1.99-r0) |
-| lib32-thunder-hang-recovery | 1.0.0-r0 (layer hosted) |
-| lib32-thunder-plugin-activator | 1.2.0 |
+| lib32-thunder-hang-recovery | 1.0.0-r0 |
+| lib32-thunder-plugin-activator | 1.2.0-r1 |
 | lib32-thunderjs | 1.0 |
 | lib32-thunderstartupservices | [1.3.1](https://github.com/rdkcentral/thunder-startup-services/releases/tag/1.3.1) |
 | lib32-tr69hostif | [1.3.7](https://github.com/rdkcentral/tr69hostif/releases/tag/1.3.7) |
