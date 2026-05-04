@@ -26,7 +26,7 @@
 | lib32-dobby-thunderplugin | 3.16.2 |
 | lib32-dropbear | [2020.81-r0 (artifact)](http://matt.ucc.asn.au/dropbear/releases/dropbear-2020.81.tar.bz2) |
 | lib32-entservices-account | [1.0.2](https://github.com/rdkcentral/entservices-account/releases/tag/1.0.2) |
-| lib32-entservices-appgateway | [1.0.1.3](https://github.com/rdkcentral/entservices-appgateway/releases/tag/1.0.1.3) |
+| lib32-entservices-appgateway | [1.1.0.2](https://github.com/rdkcentral/entservices-appgateway/releases/tag/1.1.0.2) |
 | lib32-entservices-avinput | [1.0.4](https://github.com/rdkcentral/entservices-avinput/releases/tag/1.0.4) |
 | lib32-entservices-avoutput | [1.1.0](https://github.com/rdkcentral/entservices-avoutput/releases/tag/1.1.0) |
 | lib32-entservices-backupmanager | [1.0.1](https://github.com/rdkcentral/entservices-backupmanager/releases/tag/1.0.1) |
@@ -82,7 +82,7 @@
 | lib32-key-simulator | [1.0.8](https://github.com/rdkcentral/sys_mon_tools/releases/tag/1.0.8) |
 | lib32-libcimplog1.0.0 | 1.0 |
 | lib32-libocdmrialto1 | 0.10.0 |
-| lib32-libpackage1 | [1.2.3](https://github.com/rdkcentral/libpackage/releases/tag/1.2.3) |
+| lib32-libpackage1 | [1.2.4](https://github.com/rdkcentral/libpackage/releases/tag/1.2.4) |
 | lib32-libparodus | 1.0 |
 | lib32-libprivilege0 | [1.0.2](https://github.com/rdkcentral/rdk-libunpriv/releases/tag/1.0.2) |
 | lib32-libralf1 | git |
