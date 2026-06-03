@@ -1,26 +1,26 @@
 
-# RDKE Middleware Layer 8.6.1.0 Release Note
+# RDKE Middleware Layer 8.6.2.0 Release Note
 
 | Summary       | Content |
 |---------------|---------|
 | Manifest URL  | https://github.com/rdkcentral/middleware-manifest-rdke |
-| Release Tag   | [8.6.1.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.6.1.0) |
+| Release Tag   | [8.6.2.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.6.2.0) |
 | Yocto Version | Kirkstone |
-| Date          | 2026-05-12 14:20:52 UTC |
+| Date          | 2026-06-03 11:31:37 UTC |
 | Author        | support@rdkcentral.com |
 
 
 ### Middleware Release Details
-[Middleware Release 8.6.1.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.6.1.0) has the below enlisted layer combination.
+[Middleware Release 8.6.2.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.6.2.0) has the below enlisted layer combination.
 
 | Layer Name | Current Revision/Tag |
 |------------|-------------------|
-| meta-product-raspberrypi | [4.1.4](https://github.com/rdkcentral/meta-product-raspberrypi/tree/4.1.4) |
-| meta-vendor-raspberrypi-release | [4.11.1](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/tree/4.11.1) |
+| meta-product-raspberrypi | [4.1.5](https://github.com/rdkcentral/meta-product-raspberrypi/tree/4.1.5) |
+| meta-vendor-raspberrypi-release | [4.11.3](https://github.com/rdkcentral/meta-vendor-raspberrypi-release/tree/4.11.3) |
 | build-scripts | [1.0.3](https://github.com/rdkcentral/build-scripts/tree/1.0.3) |
-| meta-stack-layering-support | [3.2.0](https://github.com/rdkcentral/meta-stack-layering-support/tree/3.2.0) |
-| meta-rdk-auxiliary | [1.8.0](https://github.com/rdkcentral/meta-rdk-auxiliary/tree/1.8.0) |
-| rdke-common-config | [1.0.21](https://github.com/rdkcentral/rdke-common-config/tree/1.0.21) |
+| meta-stack-layering-support | [3.3.1](https://github.com/rdkcentral/meta-stack-layering-support/tree/3.3.1) |
+| meta-rdk-auxiliary | [1.8.2](https://github.com/rdkcentral/meta-rdk-auxiliary/tree/1.8.2) |
+| rdke-common-config | [1.0.22](https://github.com/rdkcentral/rdke-common-config/tree/1.0.22) |
 | rdke-stb-config | [1.0.0](https://github.com/rdkcentral/rdke-stb-config/tree/1.0.0) |
 | meta-rdk-oss-reference | [4.12.0](https://github.com/rdkcentral/meta-rdk-oss-reference/tree/4.12.0) |
 | meta-oss-common-config | [1.4.0](https://github.com/rdkcentral/meta-oss-common-config/tree/1.4.0) |
@@ -28,9 +28,9 @@
 | poky | [rdk-4.6.0](https://github.com/rdkcentral/poky/tree/rdk-4.6.0) |
 | meta-python2 | [rdk-4.0.0](https://github.com/rdkcentral/meta-python2/tree/rdk-4.0.0) |
 | meta-rdk-halif-headers | [4.1.4](https://github.com/rdkcentral/meta-rdk-halif-headers/tree/4.1.4) |
-| meta-middleware-generic-support | [1.18.0](https://github.com/rdkcentral/meta-middleware-generic-support/tree/1.18.0) |
-| meta-rdk | [1.18.0](https://github.com/rdkcentral/meta-rdk/tree/1.18.0) |
-| meta-rdk-video | [1.18.1-community](https://github.com/rdkcentral/meta-rdk-video/tree/1.18.1-community) |
+| meta-middleware-generic-support | [1.19.0](https://github.com/rdkcentral/meta-middleware-generic-support/tree/1.19.0) |
+| meta-rdk | [1.19.0](https://github.com/rdkcentral/meta-rdk/tree/1.19.0) |
+| meta-rdk-video | [1.19.0](https://github.com/rdkcentral/meta-rdk-video/tree/1.19.0) |
 
 For a comprehensive list of changes, updates, and release history, refer to the [Changelog](CHANGELOG.md).
 
@@ -38,9 +38,9 @@ The [packages and versions](MiddlewarePackagesAndVersions.md) file provides the 
 
 
 
-Release Details: [https://wiki.rdkcentral.com/spaces/CMF/pages/479887491/8.6.1.0+-+RPI4-+Release+Notes](https://wiki.rdkcentral.com/spaces/CMF/pages/479887491/8.6.1.0+-+RPI4-+Release+Notes)
+Release Details: [https://wiki.rdkcentral.com/spaces/CMF/pages/485491715/8.6.2.0+-+RPI4-+Release+Notes](https://wiki.rdkcentral.com/spaces/CMF/pages/485491715/8.6.2.0+-+RPI4-+Release+Notes)
 
-For RDKE Middleware layer specific build instructions, refer [this](https://github.com/rdkcentral/middleware-manifest-rdke/blob/8.6.1.0/README.md)
+For RDKE Middleware layer specific build instructions, refer [this](https://github.com/rdkcentral/middleware-manifest-rdke/blob/8.6.2.0/README.md)
 
 ## License Details
 This project is distributed under the terms outlined in the associated [License](LICENSE) and [Notice](NOTICE) files. Please review these files for detailed information.
