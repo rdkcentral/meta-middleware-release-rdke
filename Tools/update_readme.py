@@ -64,7 +64,7 @@ def get_default_num_threads():
 NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
 
 # Check if a GitHub tag exists using GitHub API and return the matched tag (or None)
-def github_tag_exists(org, repo, tag):
+def find_github_tag(org, repo, tag):
     candidates = []
     for prefix in TAG_PREFIXES:
         candidate = f"{prefix}{tag}" if prefix else tag
@@ -90,20 +90,32 @@ def github_tag_exists(org, repo, tag):
             continue
 
     # If not found in releases, check tags endpoint and match any candidate.
-    url = f"https://api.github.com/repos/{org}/{repo}/tags"
-    try:
-        resp = requests.get(url, headers=headers, timeout=5)
-        if resp.status_code == 200:
-            tags = [t['name'] for t in resp.json()]
-            for candidate in candidates:
-                if candidate in tags:
-                    return candidate
-            return None
-        if resp.status_code in (403, 429):
-            log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-            return None
-    except requests.exceptions.RequestException as e:
-        log.debug(f"Request error checking tags endpoint: {e}")
+    # Paginate through tags (default 30 per page, request 100 per page to reduce iterations).
+    page = 1
+    per_page = 100
+    while True:
+        url = f"https://api.github.com/repos/{org}/{repo}/tags?page={page}&per_page={per_page}"
+        try:
+            resp = requests.get(url, headers=headers, timeout=5)
+            if resp.status_code == 200:
+                tags_page = resp.json()
+                if not tags_page:  # No more pages
+                    break
+                tags = [t['name'] for t in tags_page]
+                for candidate in candidates:
+                    if candidate in tags:
+                        return candidate
+                if len(tags_page) < per_page:  # Last page reached
+                    break
+                page += 1
+            elif resp.status_code in (403, 429):
+                log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
+                return None
+            else:
+                break
+        except requests.exceptions.RequestException as e:
+            log.debug(f"Request error checking tags endpoint: {e}")
+            break
     return None
 
 # Hyperlink package versions in PackagesAndVersions.md
@@ -138,7 +150,7 @@ def hyperlink_constructor(pkg, base_url, version):
             trimmed_version = re.sub(r'([_\w\d]+)-r\d+$', r'\1', trimmed_version)
             trimmed_version = re.sub(r'-r\d+$', '', trimmed_version)
             log.debug(f"Checking GitHub tag {trimmed_version} for {pkg} in repo {repo}")
-            matched_tag = github_tag_exists(org, repo, trimmed_version)
+            matched_tag = find_github_tag(org, repo, trimmed_version)
             if matched_tag:
                 log.info(f"Valid tag {matched_tag} found for {pkg} in repo {repo}")
                 return f'[{matched_tag}](https://github.com/{org}/{repo}/releases/tag/{matched_tag})'
@@ -182,7 +194,7 @@ def update_package_versions_md(md_path, url_map):
             if base_url and ver:
                 jobs.append((idx, pkg, ver, base_url))
 
-    log.info(f"Processing {md_path}: threads_to_spawn={len(jobs)}")
+    log.info(f"Processing {md_path}: jobs={len(jobs)}, max_workers={NUM_THREADS}")
 
     # Run hyperlink_constructor in parallel
     results = {}
