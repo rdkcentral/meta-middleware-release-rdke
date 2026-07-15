@@ -48,6 +48,8 @@ class Logger:
 # Default configurations.
 MLPREFIX = "lib32-"
 GITHUB_API_TOKEN = os.environ.get("GITHUB_API_TOKEN", "")
+# Tag prefixes to try while resolving GitHub tags. First entry "" means exact tag.
+TAG_PREFIXES = ["", "v", "R", "wpewebkit-"]
 # Change to "debug" or "info" for more verbose logging
 log = Logger(os.environ.get("LOG_LEVEL", "warn"))
 
@@ -61,28 +63,48 @@ def get_default_num_threads():
         return 4
 NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
 
-# Check if a GitHub tag exists using GitHub API and return True/False
+# Check if a GitHub tag exists using GitHub API and return the matched tag (or None)
 def github_tag_exists(org, repo, tag):
+    candidates = []
+    for prefix in TAG_PREFIXES:
+        candidate = f"{prefix}{tag}" if prefix else tag
+        if candidate not in candidates:
+            candidates.append(candidate)
+
     headers = {}
     if GITHUB_API_TOKEN:
         headers['Authorization'] = f'token {GITHUB_API_TOKEN}'
-    url = f"https://api.github.com/repos/{org}/{repo}/releases/tags/{tag}"
-    resp = requests.get(url, headers=headers)
-    if resp.status_code == 200:
-        return True
-    if resp.status_code in (403, 429):
-        log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-        sys.exit(1)
-    # If not found in releases, check tags endpoint
+
+    # Check release tags endpoint first for each candidate.
+    for candidate in candidates:
+        url = f"https://api.github.com/repos/{org}/{repo}/releases/tags/{candidate}"
+        try:
+            resp = requests.get(url, headers=headers, timeout=5)
+            if resp.status_code == 200:
+                return candidate
+            if resp.status_code in (403, 429):
+                log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
+                sys.exit(1)
+        except requests.exceptions.RequestException as e:
+            log.debug(f"Request error checking release tag {candidate}: {e}")
+            continue
+
+    # If not found in releases, check tags endpoint and match any candidate.
     url = f"https://api.github.com/repos/{org}/{repo}/tags"
-    resp = requests.get(url, headers=headers)
-    if resp.status_code == 200:
-        tags = [t['name'] for t in resp.json()]
-        return tag in tags
-    if resp.status_code in (403, 429):
-        log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-        return False
-    return False
+    try:
+        resp = requests.get(url, headers=headers, timeout=5)
+        if resp.status_code == 200:
+            tags = [t['name'] for t in resp.json()]
+            for candidate in candidates:
+                if candidate in tags:
+                    return candidate
+            return None
+        if resp.status_code in (403, 429):
+            log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
+            return None
+    except requests.exceptions.RequestException as e:
+        log.debug(f"Request error checking tags endpoint: {e}")
+    return None
 
 # Hyperlink package versions in PackagesAndVersions.md
 # throw error if required files are not accessible or missing
@@ -102,7 +124,7 @@ def parse_component_urls_conf(conf_path):
         sys.exit(1)
     return url_map
 
-def hyperlink_constructor(base_url, version):
+def hyperlink_constructor(pkg, base_url, version):
     # Simple tarball or ipk
     if base_url.endswith(('.tar.gz', '.tar.xz', '.tar.bz2', '.ipk')):
         return f'[{version} (artifact)]({base_url})'
@@ -115,16 +137,17 @@ def hyperlink_constructor(base_url, version):
             trimmed_version = re.sub(r'-r\d+$', '', version)
             trimmed_version = re.sub(r'([_\w\d]+)-r\d+$', r'\1', trimmed_version)
             trimmed_version = re.sub(r'-r\d+$', '', trimmed_version)
-            log.debug(f"Checking GitHub tag for {repo}: {trimmed_version}")
-            if github_tag_exists(org, repo, trimmed_version):
-                log.info(f"Valid tag found for {repo}: {trimmed_version}")
-                return f'[{trimmed_version}](https://github.com/{org}/{repo}/releases/tag/{trimmed_version})'
+            log.debug(f"Checking GitHub tag {trimmed_version} for {pkg} in repo {repo}")
+            matched_tag = github_tag_exists(org, repo, trimmed_version)
+            if matched_tag:
+                log.info(f"Valid tag {matched_tag} found for {pkg} in repo {repo}")
+                return f'[{matched_tag}](https://github.com/{org}/{repo}/releases/tag/{matched_tag})'
             else:
-                log.warn(f"No valid tag for {repo}: {trimmed_version}, leaving as plain text.")
+                log.warn(f"No matching tag {trimmed_version} found for {pkg} in repo {repo}, leaving as plain text.")
                 return trimmed_version
     # TODO: Implement for code.rdkcentral.com hosted repos
     if 'code.rdkcentral.com' in base_url:
-        log.warn(f"Hyperlinking to code.rdkcentral.com not supported in this version of the script.")
+        log.warn(f"Hyperlinking to code.rdkcentral.com not supported in this version of the script for {pkg}.")
         return f'[{version}]({base_url}/+/{version})'
     # For meta layer hosted files, no link
     if 'MetaLayerHostedFiles' in base_url:
@@ -142,11 +165,14 @@ def update_package_versions_md(md_path, url_map):
     except Exception as e:
         log.error(f"Error reading {md_path}: {e}")
         sys.exit(1)
+
+
+    # Collect jobs for each row without deduplication
     jobs = []
     for idx, line in enumerate(lines):
         # Skip lines that already contain a Markdown hyperlink
         if re.search(r'\[[^\]]+\]\([^\)]+\)', line):
-            log.warn(f"Skipping line {idx} as it already contains a hyperlink.")
+            log.info(f"Skipping line {idx} as it already contains a hyperlink({line.strip()}).")
             continue
         m = re.match(r'\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|', line)
         if m:
@@ -155,22 +181,26 @@ def update_package_versions_md(md_path, url_map):
             base_url = url_map.get(comp_name)
             if base_url and ver:
                 jobs.append((idx, pkg, ver, base_url))
+
+    log.info(f"Processing {md_path}: threads_to_spawn={len(jobs)}")
+
     # Run hyperlink_constructor in parallel
     results = {}
     with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
-        future_to_idx = {}
+        future_to_job = {}
         for idx, pkg, ver, base_url in jobs:
-            future = executor.submit(hyperlink_constructor, base_url, ver)
-            future_to_idx[future] = (idx, pkg, ver, base_url)
-            time.sleep(0.02)  # 20ms delay between thread starts
-        for future in as_completed(future_to_idx):
-            idx, pkg, ver, base_url = future_to_idx[future]
+            future = executor.submit(hyperlink_constructor, pkg, base_url, ver)
+            future_to_job[future] = (idx, pkg, ver, base_url)
+            time.sleep(0.1)  # 100ms delay between thread submissions for rate-limiting
+        for future in as_completed(future_to_job):
+            idx, pkg, ver, base_url = future_to_job[future]
             try:
                 link = future.result()
                 results[idx] = f'| {pkg} | {link} |\n'
             except Exception as e:
                 log.error(f"Error hyperlinking {pkg}: {e}")
                 results[idx] = lines[idx]  # fallback to original line
+
     # Build new lines
     new_lines = []
     for idx, line in enumerate(lines):
@@ -186,11 +216,18 @@ COMMENT_RE = re.compile(r'<!--.*?-->', re.DOTALL)
 
 def fetch_manifest_xml(manifest_url):
     log.debug(f"Fetching manifest XML: {manifest_url}")
-    resp = requests.get(manifest_url)
-    if resp.status_code != 200:
-        log.error(f"Failed to fetch manifest XML from {manifest_url}")
+    try:
+        resp = requests.get(manifest_url, timeout=10)
+        if resp.status_code != 200:
+            log.error(f"Failed to fetch manifest XML from {manifest_url}")
+            sys.exit(1)
+        return resp.text
+    except requests.exceptions.Timeout:
+        log.error(f"Timeout fetching manifest XML from {manifest_url}")
         sys.exit(1)
-    return resp.text
+    except requests.exceptions.RequestException as e:
+        log.error(f"Error fetching manifest XML from {manifest_url}: {e}")
+        sys.exit(1)
 
 def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None, remote_table=None, project_table=None):
     # Remove XML comments
