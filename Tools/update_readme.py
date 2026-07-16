@@ -90,7 +90,8 @@ def find_github_tag(org, repo, tag):
     candidates = []
     for prefix in TAG_PREFIXES:
         candidate = f"{prefix}{tag}" if prefix else tag
-        if candidate not in candidates:
+        # Skip if tag already starts with this prefix
+        if candidate not in candidates and not (prefix and tag.startswith(prefix)):
             candidates.append(candidate)
 
     headers = {}
@@ -118,6 +119,8 @@ def find_github_tag(org, repo, tag):
                 return None
             if resp.status_code in (403, 429):
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
+                with TAG_LOOKUP_CACHE_LOCK:
+                    TAG_LOOKUP_CACHE[cache_key] = None
                 return None
             log.debug(f"Unexpected status checking git ref for tag {candidate}: {resp.status_code}")
             saw_transient_issue = True
@@ -196,7 +199,7 @@ def update_package_versions_md(md_path, url_map):
     for idx, line in enumerate(lines):
         # Skip lines that already contain a Markdown hyperlink
         if re.search(r'\[[^\]]+\]\([^\)]+\)', line):
-            log.info(f"Skipping line {idx} as it already contains a hyperlink({line.strip()}).")
+            log.info(f"Skipping line {idx + 1} as it already contains a hyperlink ({line.strip()}).")
             continue
         m = re.match(r'\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|', line)
         if m:
@@ -408,7 +411,6 @@ def main():
             display_rev = revision[len('refs/tags/'):]
             is_tag = True
         link = display_rev
-        link_type = 'plain'
         # Handle GitHub links (org root or repo URL)
         org = None
         if remote_url.startswith('https://github.com/') or remote_url.startswith('https://raw.githubusercontent.com/'):
@@ -420,19 +422,15 @@ def main():
                 gh_url = f"https://github.com/{org}/{repo}"
                 if not is_tag and len(display_rev) == 40 and all(c in '0123456789abcdef' for c in display_rev.lower()):
                     link = f"[{display_rev}]({gh_url}/commit/{display_rev})"
-                    link_type = 'github-commit'
                 else:
                     link = f"[{display_rev}]({gh_url}/tree/{display_rev})"
-                    link_type = 'github-tag'
         # If Yocto, generate link
         elif 'git.yoctoproject.org' in remote_url:
             repo = name
             if len(display_rev) == 40 and all(c in '0123456789abcdef' for c in display_rev.lower()):
                 link = f"[{display_rev}](https://git.yoctoproject.org/cgit/cgit.cgi/{repo}/commit/?id={display_rev})"
-                link_type = 'yocto-commit'
             else:
                 link = display_rev
-                link_type = 'yocto-plain'
         project_rows.append(f"| {name} | {link} |")
     project_md = '\n'.join(project_rows)
 
