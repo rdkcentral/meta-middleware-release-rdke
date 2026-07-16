@@ -109,8 +109,6 @@ def find_github_tag(org, repo, tag):
                 return None
             if resp.status_code in (403, 429):
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-                with TAG_LOOKUP_CACHE_LOCK:
-                    TAG_LOOKUP_CACHE[cache_key] = None
                 return None
             log.debug(f"Unexpected status checking git ref for tag {candidate}: {resp.status_code}")
             saw_transient_issue = True
@@ -374,7 +372,11 @@ def main():
 
     manifest_url = f"{fetch_base_url}/{release_version}/{manifest_name}"
     xml_text = fetch_manifest_xml(manifest_url)
-    remote_table, project_table = parse_manifest(xml_text, manifest_url, release_version)
+    try:
+        remote_table, project_table = parse_manifest(xml_text, manifest_url, release_version)
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
 
     # Format project table for README: Name | Revision/Tag Link (GitHub: link, else plain)
     project_rows = []
