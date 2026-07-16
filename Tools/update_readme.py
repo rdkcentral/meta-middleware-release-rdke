@@ -451,8 +451,12 @@ def main():
     gen_date = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
 
     log.info(f"Reading template file: {template_file}")
-    with io.open(template_file, 'r', encoding='utf-8') as f:
-        content = f.read()
+    try:
+        with io.open(template_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception as e:
+        log.error(f"Error reading template file {template_file}: {e}")
+        sys.exit(1)
 
     # Find meta-stack-layering-support revision/tag for hyperlinking variables.md.
     meta_stacklayering_version = ''
@@ -487,8 +491,12 @@ def main():
     content = content.replace('<AUTHOR>', author)
     content = content.replace('<TEST_REPORT_LINE>', test_report_line)
 
-    with io.open(output_file, 'w', encoding='utf-8') as f:
-        f.write(content)
+    try:
+        with io.open(output_file, 'w', encoding='utf-8') as f:
+            f.write(content)
+    except Exception as e:
+        log.error(f"Error writing output file {output_file}: {e}")
+        sys.exit(1)
     log.info(f"Updated README written to {output_file}")
 
     # --- Hyperlink package versions in PackagesAndVersions.md ---
