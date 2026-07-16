@@ -281,11 +281,16 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
         if name and fetch:
             remote_table[name] = fetch
 
+    # Read manifest defaults so projects can inherit remote/revision.
+    default_elem = root.find('default')
+    default_remote = default_elem.get('remote') if default_elem is not None else None
+    default_revision = default_elem.get('revision') if default_elem is not None else None
+
     # Build project table
     for project in root.findall('project'):
         name = project.get('name')
-        remote = project.get('remote')
-        revision = project.get('revision')
+        remote = project.get('remote') or default_remote
+        revision = project.get('revision') or default_revision
         if name and revision:
             project_table.append({'name': name, 'remote': remote, 'revision': revision})
 
@@ -305,6 +310,7 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
         # Convert github.com to raw.githubusercontent.com for fetching manifests
         if fetch_url.startswith("https://github.com"):
             fetch_url = fetch_url.replace("https://github.com", "https://raw.githubusercontent.com")
+        fetch_url = fetch_url.rstrip('/')
         # Build manifest URL
         url = f"{fetch_url}/{inc_tag}/{inc_name}"
         inc_xml = fetch_manifest_xml(url)
@@ -322,6 +328,7 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
         # Convert github.com to raw.githubusercontent.com for fetch_url
         if fetch_url.startswith("https://github.com"):
             fetch_url = fetch_url.replace("https://github.com", "https://raw.githubusercontent.com")
+        fetch_url = fetch_url.rstrip('/')
         # Build correct submanifest URL: {remote}/{project}/{revision}/{manifest-name}
         url = f"{fetch_url}/{sub_project}/{sub_tag}/{sub_name}"
         sub_xml = fetch_manifest_xml(url)
@@ -382,6 +389,7 @@ def main():
     fetch_base_url = base_url
     if fetch_base_url.startswith("https://github.com"):
         fetch_base_url = fetch_base_url.replace("https://github.com", "https://raw.githubusercontent.com")
+    fetch_base_url = fetch_base_url.rstrip('/')
 
     manifest_url = f"{fetch_base_url}/{release_version}/{manifest_name}"
     xml_text = fetch_manifest_xml(manifest_url)

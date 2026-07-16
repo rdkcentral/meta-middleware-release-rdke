@@ -9,7 +9,7 @@
 # Requires Python 3.x
 # Setup requirements (one time): pip install requests
 # RDKE_LAYER can be Vendor/Middleware/Application
-# Script now supports GITHUB_API_TOKEN environment variable(optional) to reduce the GitHub API rate limit failures.
+# Script now supports GITHUB_API_TOKEN environment variable (optional) to reduce the GitHub API rate limit failures.
 Usage: export GITHUB_API_TOKEN="<Token>"; python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md "AUTHOR,email" "TestReportUrl" [FeatureListUrl]
 ```
  - Most configuration is now read from `release_information.conf`.
