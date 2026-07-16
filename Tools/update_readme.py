@@ -91,6 +91,7 @@ def find_github_tag(org, repo, tag):
 
     # Check each candidate tag directly via git refs.
     # This avoids paginating /tags and also avoids separate /releases probes.
+    saw_transient_issue = False
     for candidate in candidates:
         candidate_ref = requests.utils.quote(candidate, safe='')
         url = f"https://api.github.com/repos/{org}/{repo}/git/ref/tags/{candidate_ref}"
@@ -113,11 +114,15 @@ def find_github_tag(org, repo, tag):
                     TAG_LOOKUP_CACHE[cache_key] = None
                 return None
             log.debug(f"Unexpected status checking git ref for tag {candidate}: {resp.status_code}")
+            saw_transient_issue = True
         except requests.exceptions.RequestException as e:
             log.debug(f"Request error checking git ref for tag {candidate}: {e}")
+            saw_transient_issue = True
             continue
-    with TAG_LOOKUP_CACHE_LOCK:
-        TAG_LOOKUP_CACHE[cache_key] = None
+    # Cache negative results only for definitive misses (all candidates returned 404).
+    if not saw_transient_issue:
+        with TAG_LOOKUP_CACHE_LOCK:
+            TAG_LOOKUP_CACHE[cache_key] = None
     return None
 
 # Hyperlink package versions in PackagesAndVersions.md
