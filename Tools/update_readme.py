@@ -110,7 +110,7 @@ def find_github_tag(org, repo, tag):
                 page += 1
             elif resp.status_code in (403, 429):
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-                return None
+                sys.exit(1)
             else:
                 break
         except requests.exceptions.RequestException as e:
@@ -153,7 +153,7 @@ def hyperlink_constructor(pkg, base_url, version):
             matched_tag = find_github_tag(org, repo, trimmed_version)
             if matched_tag:
                 log.info(f"Valid tag {matched_tag} found for {pkg} in repo {repo}")
-                return f'[{matched_tag}](https://github.com/{org}/{repo}/releases/tag/{matched_tag})'
+                return f'[{matched_tag}](https://github.com/{org}/{repo}/tree/{matched_tag})'
             else:
                 log.warn(f"No matching tag {trimmed_version} found for {pkg} in repo {repo}, leaving as plain text.")
                 return trimmed_version
