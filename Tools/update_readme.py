@@ -119,8 +119,6 @@ def find_github_tag(org, repo, tag):
                 return None
             if resp.status_code in (403, 429):
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-                with TAG_LOOKUP_CACHE_LOCK:
-                    TAG_LOOKUP_CACHE[cache_key] = None
                 return None
             log.debug(f"Unexpected status checking git ref for tag {candidate}: {resp.status_code}")
             saw_transient_issue = True
@@ -204,7 +202,7 @@ def update_package_versions_md(md_path, url_map):
         m = re.match(r'\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|', line)
         if m:
             pkg, ver = m.group(1).strip(), m.group(2).strip()
-            comp_name = pkg.replace(MLPREFIX, '')
+            comp_name = pkg[len(MLPREFIX):] if pkg.startswith(MLPREFIX) else pkg
             base_url = url_map.get(comp_name)
             if base_url and ver:
                 jobs.append((idx, pkg, ver, base_url))
