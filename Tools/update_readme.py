@@ -98,10 +98,21 @@ def find_github_tag(org, repo, tag):
         try:
             resp = requests.get(url, headers=headers, timeout=5)
             if resp.status_code == 200:
-                tags_page = resp.json()
+                try:
+                    tags_page = resp.json()
+                except ValueError as e:
+                    log.debug(f"Invalid JSON from tags endpoint: {e}")
+                    break
+                if not isinstance(tags_page, list):
+                    log.debug(f"Unexpected tags endpoint response type: {type(tags_page).__name__}")
+                    break
                 if not tags_page:  # No more pages
                     break
-                tags = [t['name'] for t in tags_page]
+                try:
+                    tags = [t['name'] for t in tags_page if isinstance(t, dict) and 'name' in t]
+                except (TypeError, KeyError) as e:
+                    log.debug(f"Unexpected tags endpoint item format: {e}")
+                    break
                 for candidate in candidates:
                     if candidate in tags:
                         return candidate
