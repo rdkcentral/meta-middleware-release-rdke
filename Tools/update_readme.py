@@ -64,7 +64,11 @@ def get_default_num_threads():
         return 4
 NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
 # Delay between thread submissions (seconds). Set >0 to throttle GitHub API calls.
-SUBMIT_DELAY_SEC = max(0.0, float(os.environ.get("SUBMIT_DELAY_SEC", "0")))
+try:
+    SUBMIT_DELAY_SEC = max(0.0, float(os.environ.get("SUBMIT_DELAY_SEC", "0")))
+except ValueError:
+    log.warn("Invalid SUBMIT_DELAY_SEC value; defaulting to 0")
+    SUBMIT_DELAY_SEC = 0.0
 TAG_LOOKUP_CACHE = {}
 TAG_LOOKUP_CACHE_LOCK = Lock()
 
@@ -100,10 +104,14 @@ def find_github_tag(org, repo, tag):
                 continue
             if resp.status_code == 401:
                 log.error("GitHub API authentication failed. Check GITHUB_API_TOKEN.")
-                raise RuntimeError("GitHub API authentication failed")
+                with TAG_LOOKUP_CACHE_LOCK:
+                    TAG_LOOKUP_CACHE[cache_key] = None
+                return None
             if resp.status_code in (403, 429):
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-                raise RuntimeError("GitHub API rate limit exceeded or access forbidden")
+                with TAG_LOOKUP_CACHE_LOCK:
+                    TAG_LOOKUP_CACHE[cache_key] = None
+                return None
             log.debug(f"Unexpected status checking git ref for tag {candidate}: {resp.status_code}")
         except requests.exceptions.RequestException as e:
             log.debug(f"Request error checking git ref for tag {candidate}: {e}")
