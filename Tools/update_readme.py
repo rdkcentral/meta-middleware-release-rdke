@@ -236,7 +236,7 @@ def fetch_manifest_xml(manifest_url):
     try:
         resp = requests.get(manifest_url, timeout=10)
         if resp.status_code != 200:
-            log.error(f"Failed to fetch manifest XML from {manifest_url}")
+            log.error(f"Failed to fetch manifest XML from {manifest_url} (status={resp.status_code})")
             sys.exit(1)
         return resp.text
     except requests.exceptions.Timeout:
