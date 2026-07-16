@@ -25,7 +25,7 @@ For a comprehensive list of changes, updates, and release history, refer to the 
 
 <TEST_REPORT_LINE>
 
-For RDKE <RDKE_LAYER> layer specific build instructions, refer [this](<BASE_URL>/blob/<RELEASE_VERSION>/README.md)
+For RDKE <RDKE_LAYER> layer specific build instructions, refer to [this](<BASE_URL>/blob/<RELEASE_VERSION>/README.md)
 
 ## License Details
 This project is distributed under the terms outlined in the associated [License](LICENSE) and [Notice](NOTICE) files. Please review these files for detailed information.

@@ -17,7 +17,6 @@
 # limitations under the License.
 ##########################################################################
 
-from __future__ import print_function
 import sys
 import io
 import requests
@@ -294,8 +293,11 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
         if inc_remote and inc_remote in remote_table:
             fetch_url = remote_table[inc_remote]
         else:
-            # Use current manifest's repo URL
-            fetch_url = manifest_url.rsplit('/', 2)[0]  # up to repo/tag
+            # Use current manifest's repo URL (repository root, without tag/file)
+            fetch_url = manifest_url.rsplit('/', 2)[0]
+        # Convert github.com to raw.githubusercontent.com for fetching manifests
+        if fetch_url.startswith("https://github.com"):
+            fetch_url = fetch_url.replace("https://github.com", "https://raw.githubusercontent.com")
         # Build manifest URL
         url = f"{fetch_url}/{inc_tag}/{inc_name}"
         inc_xml = fetch_manifest_xml(url)
