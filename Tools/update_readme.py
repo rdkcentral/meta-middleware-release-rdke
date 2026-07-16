@@ -56,12 +56,21 @@ log = Logger(os.environ.get("LOG_LEVEL", "warn"))
 # Number of threads for parallel hyperlinking
 def get_default_num_threads():
     try:
-        log.debug(f"os.cpu_count() returned: {os.cpu_count()}")
-        return os.cpu_count() or 4
+        cpu = os.cpu_count() or 4
+        log.debug(f"os.cpu_count() returned: {cpu}")
     except Exception:
         log.debug("os.cpu_count() returned None or caused an exception, defaulting to 4 threads.")
-        return 4
-NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
+        cpu = 4
+    # API-bound work does not benefit from very high concurrency by default.
+    return min(cpu, 16)
+
+_default_threads = get_default_num_threads()
+_raw_threads = os.environ.get("NUM_THREADS", "")
+try:
+    NUM_THREADS = max(1, int(_raw_threads)) if _raw_threads else _default_threads
+except ValueError:
+    log.warn(f"Invalid NUM_THREADS value '{_raw_threads}'; defaulting to {_default_threads}")
+    NUM_THREADS = _default_threads
 # Delay between thread submissions (seconds). Set >0 to throttle GitHub API calls.
 try:
     SUBMIT_DELAY_SEC = max(0.0, float(os.environ.get("SUBMIT_DELAY_SEC", "0")))
@@ -116,7 +125,8 @@ def find_github_tag(org, repo, tag):
             log.debug(f"Request error checking git ref for tag {candidate}: {e}")
             saw_transient_issue = True
             continue
-    # Cache negative results only for definitive misses (all candidates returned 404).
+    # Cache negative results for definitive misses (all 404s).
+    # Auth failures (401) are cached above; transient/network/rate-limit paths are not.
     if not saw_transient_issue:
         with TAG_LOOKUP_CACHE_LOCK:
             TAG_LOOKUP_CACHE[cache_key] = None
@@ -161,7 +171,7 @@ def hyperlink_constructor(pkg, base_url, version):
                 return trimmed_version
     # TODO: Implement for code.rdkcentral.com hosted repos
     if 'code.rdkcentral.com' in base_url:
-        log.warn(f"Hyperlinking to code.rdkcentral.com not supported in this version of the script for {pkg}.")
+        log.warn(f"Best-effort hyperlink for code.rdkcentral.com (not validated) for {pkg}.")
         return f'[{version}]({base_url}/+/{version})'
     # For meta layer hosted files, no link
     if 'MetaLayerHostedFiles' in base_url:
