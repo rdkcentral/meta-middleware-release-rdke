@@ -26,6 +26,7 @@ import re
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 
 class Logger:
     LEVELS = {"debug": 10, "info": 20, "warn": 30, "error": 40}
@@ -62,9 +63,18 @@ def get_default_num_threads():
         log.debug("os.cpu_count() returned None or caused an exception, defaulting to 4 threads.")
         return 4
 NUM_THREADS = int(os.environ.get("NUM_THREADS", str(get_default_num_threads())))
+# Delay between thread submissions (seconds). Set >0 to throttle GitHub API calls.
+SUBMIT_DELAY_SEC = max(0.0, float(os.environ.get("SUBMIT_DELAY_SEC", "0")))
+TAG_LOOKUP_CACHE = {}
+TAG_LOOKUP_CACHE_LOCK = Lock()
 
 # Check if a GitHub tag exists using GitHub API and return the matched tag (or None)
 def find_github_tag(org, repo, tag):
+    cache_key = (org, repo, tag)
+    with TAG_LOOKUP_CACHE_LOCK:
+        if cache_key in TAG_LOOKUP_CACHE:
+            return TAG_LOOKUP_CACHE[cache_key]
+
     candidates = []
     for prefix in TAG_PREFIXES:
         candidate = f"{prefix}{tag}" if prefix else tag
@@ -75,58 +85,31 @@ def find_github_tag(org, repo, tag):
     if GITHUB_API_TOKEN:
         headers['Authorization'] = f'token {GITHUB_API_TOKEN}'
 
-    # Check release tags endpoint first for each candidate.
+    # Check each candidate tag directly via git refs.
+    # This avoids paginating /tags and also avoids separate /releases probes.
     for candidate in candidates:
-        url = f"https://api.github.com/repos/{org}/{repo}/releases/tags/{candidate}"
+        candidate_ref = requests.utils.quote(candidate, safe='')
+        url = f"https://api.github.com/repos/{org}/{repo}/git/ref/tags/{candidate_ref}"
         try:
             resp = requests.get(url, headers=headers, timeout=5)
             if resp.status_code == 200:
+                with TAG_LOOKUP_CACHE_LOCK:
+                    TAG_LOOKUP_CACHE[cache_key] = candidate
                 return candidate
+            if resp.status_code == 404:
+                continue
+            if resp.status_code == 401:
+                log.error("GitHub API authentication failed. Check GITHUB_API_TOKEN.")
+                raise RuntimeError("GitHub API authentication failed")
             if resp.status_code in (403, 429):
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-                sys.exit(1)
+                raise RuntimeError("GitHub API rate limit exceeded or access forbidden")
+            log.debug(f"Unexpected status checking git ref for tag {candidate}: {resp.status_code}")
         except requests.exceptions.RequestException as e:
-            log.debug(f"Request error checking release tag {candidate}: {e}")
+            log.debug(f"Request error checking git ref for tag {candidate}: {e}")
             continue
-
-    # If not found in releases, check tags endpoint and match any candidate.
-    # Paginate through tags (default 30 per page, request 100 per page to reduce iterations).
-    page = 1
-    per_page = 100
-    while True:
-        url = f"https://api.github.com/repos/{org}/{repo}/tags?page={page}&per_page={per_page}"
-        try:
-            resp = requests.get(url, headers=headers, timeout=5)
-            if resp.status_code == 200:
-                try:
-                    tags_page = resp.json()
-                except ValueError as e:
-                    log.debug(f"Invalid JSON from tags endpoint: {e}")
-                    break
-                if not isinstance(tags_page, list):
-                    log.debug(f"Unexpected tags endpoint response type: {type(tags_page).__name__}")
-                    break
-                if not tags_page:  # No more pages
-                    break
-                try:
-                    tags = [t['name'] for t in tags_page if isinstance(t, dict) and 'name' in t]
-                except (TypeError, KeyError) as e:
-                    log.debug(f"Unexpected tags endpoint item format: {e}")
-                    break
-                for candidate in candidates:
-                    if candidate in tags:
-                        return candidate
-                if len(tags_page) < per_page:  # Last page reached
-                    break
-                page += 1
-            elif resp.status_code in (403, 429):
-                log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-                sys.exit(1)
-            else:
-                break
-        except requests.exceptions.RequestException as e:
-            log.debug(f"Request error checking tags endpoint: {e}")
-            break
+    with TAG_LOOKUP_CACHE_LOCK:
+        TAG_LOOKUP_CACHE[cache_key] = None
     return None
 
 # Hyperlink package versions in PackagesAndVersions.md
@@ -214,7 +197,8 @@ def update_package_versions_md(md_path, url_map):
         for idx, pkg, ver, base_url in jobs:
             future = executor.submit(hyperlink_constructor, pkg, base_url, ver)
             future_to_job[future] = (idx, pkg, ver, base_url)
-            time.sleep(0.1)  # 100ms delay between thread submissions for rate-limiting
+            if SUBMIT_DELAY_SEC > 0:
+                time.sleep(SUBMIT_DELAY_SEC)
         for future in as_completed(future_to_job):
             idx, pkg, ver, base_url = future_to_job[future]
             try:
@@ -255,7 +239,10 @@ def fetch_manifest_xml(manifest_url):
 def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None, remote_table=None, project_table=None):
     # Remove XML comments
     xml_text = COMMENT_RE.sub('', xml_text)
-    tree = ET.ElementTree(ET.fromstring(xml_text))
+    try:
+        tree = ET.ElementTree(ET.fromstring(xml_text))
+    except ET.ParseError as e:
+        raise RuntimeError(f"Failed to parse manifest XML from {manifest_url}: {e}")
     root = tree.getroot()
     if processed_manifests is None:
         processed_manifests = set()
@@ -374,12 +361,6 @@ def main():
     xml_text = fetch_manifest_xml(manifest_url)
     remote_table, project_table = parse_manifest(xml_text, manifest_url, release_version)
 
-    # Format remote table for README
-    remote_rows = ["| Name | Fetch URL |"]
-    for name, url in remote_table.items():
-        remote_rows.append(f"| {name} | {url} |")
-    remote_md = '\n'.join(remote_rows)
-
     # Format project table for README: Name | Revision/Tag Link (GitHub: link, else plain)
     project_rows = []
     seen = set()
@@ -463,16 +444,11 @@ def main():
 
     content = content.replace('<RELEASE_VERSION>', release_version)
     content = content.replace('<YOCTO_VERSION>', yocto_version)
-    content = content.replace('<REMOTE_TABLE>', remote_md)
     content = content.replace('<LAYER_TABLE>', project_md)
     content = content.replace('<RDKE_LAYER>', rdke_layer)
     content = content.replace('<BASE_URL>', original_base_url)
-    # Remove angle brackets if present around PACKAGE_LIST_LINE
-    content = re.sub(r'<\s*PACKAGE_LIST_LINE\s*>', package_list_line, content)
-    content = content.replace('PACKAGE_LIST_LINE', package_list_line)
-    # Remove angle brackets if present around FEATURE_LIST_LINE
-    content = re.sub(r'<\s*FEATURE_LIST_LINE\s*>', feature_list_line, content)
-    content = content.replace('FEATURE_LIST_LINE', feature_list_line)
+    content = content.replace('<PACKAGE_LIST_LINE>', package_list_line)
+    content = content.replace('<FEATURE_LIST_LINE>', feature_list_line)
     content = content.replace('<STACKLAYERING_VERSION>', meta_stacklayering_version)
     content = content.replace('<GEN_DATE>', gen_date)
     content = content.replace('<AUTHOR>', author)
