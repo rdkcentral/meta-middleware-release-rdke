@@ -100,6 +100,11 @@ def find_github_tag(org, repo, tag):
 
     # Check each candidate tag directly via git refs.
     # This avoids paginating /tags and also avoids separate /releases probes.
+    now = time.time()
+    rate_limited_until = getattr(find_github_tag, "_rate_limited_until", 0.0)
+    if now < rate_limited_until:
+        raise RuntimeError("GitHub API tag lookups are temporarily rate-limited")
+
     saw_transient_issue = False
     for candidate in candidates:
         candidate_ref = requests.utils.quote(candidate, safe='')
@@ -118,8 +123,15 @@ def find_github_tag(org, repo, tag):
                     TAG_LOOKUP_CACHE[cache_key] = None
                 return None
             if resp.status_code in (403, 429):
+                retry_after = resp.headers.get("Retry-After", "")
+                try:
+                    delay = float(retry_after) if retry_after else 60.0
+                except ValueError:
+                    delay = 60.0
+                find_github_tag._rate_limited_until = time.time() + delay
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
-                return None
+                saw_transient_issue = True
+                break
             log.debug(f"Unexpected status checking git ref for tag {candidate}: {resp.status_code}")
             saw_transient_issue = True
         except requests.exceptions.RequestException as e:
@@ -128,9 +140,10 @@ def find_github_tag(org, repo, tag):
             continue
     # Cache negative results for definitive misses (all 404s).
     # Auth failures (401) are cached above; transient/network/rate-limit paths are not.
-    if not saw_transient_issue:
-        with TAG_LOOKUP_CACHE_LOCK:
-            TAG_LOOKUP_CACHE[cache_key] = None
+    if saw_transient_issue:
+        raise RuntimeError("Unable to validate GitHub tags due to transient GitHub API/network errors")
+    with TAG_LOOKUP_CACHE_LOCK:
+        TAG_LOOKUP_CACHE[cache_key] = None
     return None
 
 # Hyperlink package versions in PackagesAndVersions.md
@@ -458,16 +471,6 @@ def main():
         log.error(f"Error reading template file {template_file}: {e}")
         sys.exit(1)
 
-    # Find meta-stack-layering-support revision/tag for hyperlinking variables.md.
-    meta_stacklayering_version = ''
-    for proj in project_table:
-        if proj['name'] == 'meta-stack-layering-support':
-            tag = proj['revision']
-            if tag.startswith('refs/tags/'):
-                tag = tag[len('refs/tags/'):]
-            meta_stacklayering_version = tag
-            break
-
     # Fill test report line if provided
     test_report_line = ''
     if test_report_url:
@@ -486,7 +489,6 @@ def main():
     content = content.replace('<BASE_URL>', original_base_url)
     content = content.replace('<PACKAGE_LIST_LINE>', package_list_line)
     content = content.replace('<FEATURE_LIST_LINE>', feature_list_line)
-    content = content.replace('<STACKLAYERING_VERSION>', meta_stacklayering_version)
     content = content.replace('<GEN_DATE>', gen_date)
     content = content.replace('<AUTHOR>', author)
     content = content.replace('<TEST_REPORT_LINE>', test_report_line)
