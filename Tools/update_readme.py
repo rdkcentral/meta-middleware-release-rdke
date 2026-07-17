@@ -352,8 +352,11 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
 def main():
     start_time = time.time()
 
+    # Compute script directory to make all relative paths work regardless of cwd
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Read release_information.conf for manifest info
-    conf_path = "Tools/release_information.conf"
+    conf_path = os.path.join(script_dir, "release_information.conf")
     release_info = {}
     log.info(f"Reading release information from {conf_path}")
     try:
@@ -503,8 +506,10 @@ def main():
 
     # --- Hyperlink package versions in PackagesAndVersions.md ---
     log.info(f"Updating {rdke_layer}PackagesAndVersions.md with hyperlinks.")
-    url_map = parse_component_urls_conf("Tools/component_urls.conf")
-    update_package_versions_md(f"{rdke_layer}PackagesAndVersions.md", url_map)
+    component_urls_path = os.path.join(script_dir, "component_urls.conf")
+    package_versions_path = os.path.join(os.path.dirname(script_dir), f"{rdke_layer}PackagesAndVersions.md")
+    url_map = parse_component_urls_conf(component_urls_path)
+    update_package_versions_md(package_versions_path, url_map)
     log.info(f"Updated {rdke_layer}PackagesAndVersions.md with hyperlinks.")
     print("Finished in {:.2f} seconds".format(time.time() - start_time))
 

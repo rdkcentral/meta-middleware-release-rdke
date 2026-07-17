@@ -3,7 +3,7 @@
 
 | Summary       | Content |
 |---------------|---------|
-| Manifest URL  | <BASE_URL> |
+| Manifest Repo URL | <BASE_URL> |
 | Release Tag   | [<RELEASE_VERSION>](<BASE_URL>/releases/tag/<RELEASE_VERSION>) |
 | Yocto Version | <YOCTO_VERSION> |
 | Date          | <GEN_DATE> |
