@@ -402,6 +402,23 @@ def main():
         manifest_name += '.xml'
     release_version = release_info.get('RELEASE_VERSION', '')
     rdke_layer = release_info.get('RDKE_LAYER', '')
+    valid_layers = {"Vendor", "Middleware", "Application"}
+    if rdke_layer not in valid_layers:
+        log.error(
+            f"Invalid RDKE_LAYER '{rdke_layer}' in {conf_path}; expected one of: {', '.join(sorted(valid_layers))}"
+        )
+        sys.exit(1)
+
+    component_urls_path = os.path.join(script_dir, "component_urls.conf")
+    package_versions_path = os.path.join(os.path.dirname(script_dir), f"{rdke_layer}PackagesAndVersions.md")
+    if not os.path.isfile(component_urls_path):
+        log.error(f"Missing required file: {component_urls_path}. See Tools/UPDATE_GUIDE.md.")
+        sys.exit(1)
+    if not os.path.isfile(package_versions_path):
+        log.error(
+            f"Missing required file: {package_versions_path}. Generate it per Tools/UPDATE_GUIDE.md before running."
+        )
+        sys.exit(1)
 
     # Only convert to raw.githubusercontent.com for fetching manifests, not for README links
     fetch_base_url = base_url
@@ -508,8 +525,6 @@ def main():
 
     # --- Hyperlink package versions in PackagesAndVersions.md ---
     log.info(f"Updating {rdke_layer}PackagesAndVersions.md with hyperlinks.")
-    component_urls_path = os.path.join(script_dir, "component_urls.conf")
-    package_versions_path = os.path.join(os.path.dirname(script_dir), f"{rdke_layer}PackagesAndVersions.md")
     url_map = parse_component_urls_conf(component_urls_path)
     update_package_versions_md(package_versions_path, url_map)
     log.info(f"Updated {rdke_layer}PackagesAndVersions.md with hyperlinks.")
