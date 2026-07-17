@@ -3,11 +3,11 @@
 
 | Summary       | Content |
 |---------------|---------|
-| Manifest URL  | https://github.com/rdkcentral/middleware-manifest-rdke |
+| Manifest Repo URL | https://github.com/rdkcentral/middleware-manifest-rdke |
 | Release Tag   | [8.6.2.0](https://github.com/rdkcentral/middleware-manifest-rdke/releases/tag/8.6.2.0) |
 | Yocto Version | Kirkstone |
-| Date          | 2026-06-03 11:31:37 UTC |
-| Author        | support@rdkcentral.com |
+| Date          | 2026-07-17 15:46:23 UTC |
+| Author        | ReleaseTeam, email_id |
 
 
 ### Middleware Release Details
@@ -36,11 +36,11 @@ For a comprehensive list of changes, updates, and release history, refer to the 
 
 The [packages and versions](MiddlewarePackagesAndVersions.md) file provides the list of packages in this Middleware release.
 
+List of features: https://example.com/features
 
+Release Details: [https://example.com/test-report](https://example.com/test-report)
 
-Release Details: [https://wiki.rdkcentral.com/spaces/CMF/pages/485491715/8.6.2.0+-+RPI4-+Release+Notes](https://wiki.rdkcentral.com/spaces/CMF/pages/485491715/8.6.2.0+-+RPI4-+Release+Notes)
-
-For RDKE Middleware layer specific build instructions, refer [this](https://github.com/rdkcentral/middleware-manifest-rdke/blob/8.6.2.0/README.md)
+For RDKE Middleware layer specific build instructions, refer to [this](https://github.com/rdkcentral/middleware-manifest-rdke/blob/8.6.2.0/README.md)
 
 ## License Details
 This project is distributed under the terms outlined in the associated [License](LICENSE) and [Notice](NOTICE) files. Please review these files for detailed information.
