@@ -96,12 +96,13 @@ def find_github_tag(org, repo, tag):
 
     headers = {}
     if GITHUB_API_TOKEN:
-        headers['Authorization'] = f'token {GITHUB_API_TOKEN}'
+        headers['Authorization'] = f'Bearer {GITHUB_API_TOKEN}'
 
     # Check each candidate tag directly via git refs.
     # This avoids paginating /tags and also avoids separate /releases probes.
     now = time.time()
-    rate_limited_until = getattr(find_github_tag, "_rate_limited_until", 0.0)
+    with TAG_LOOKUP_CACHE_LOCK:
+        rate_limited_until = getattr(find_github_tag, "_rate_limited_until", 0.0)
     if now < rate_limited_until:
         raise RuntimeError("GitHub API tag lookups are temporarily rate-limited")
 
@@ -128,7 +129,8 @@ def find_github_tag(org, repo, tag):
                     delay = float(retry_after) if retry_after else 60.0
                 except ValueError:
                     delay = 60.0
-                find_github_tag._rate_limited_until = time.time() + delay
+                with TAG_LOOKUP_CACHE_LOCK:
+                    find_github_tag._rate_limited_until = time.time() + delay
                 log.error("API rate limit exceeded or access forbidden. Try using GITHUB_API_TOKEN or try again later.")
                 saw_transient_issue = True
                 break
