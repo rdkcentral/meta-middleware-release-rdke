@@ -365,7 +365,8 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
 def main():
     start_time = time.time()
 
-    # Compute script directory to make all relative paths work regardless of cwd
+    # Compute script directory for locating conf files relative to the script.
+    # Note: template_file and output_file (from argv) are relative to cwd; run from repo root.
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Read release_information.conf for manifest info
@@ -438,8 +439,8 @@ def main():
     fetch_base_url = fetch_base_url.rstrip('/')
 
     manifest_url = f"{fetch_base_url}/{release_version}/{manifest_name}"
-    xml_text = fetch_manifest_xml(manifest_url)
     try:
+        xml_text = fetch_manifest_xml(manifest_url)
         remote_table, project_table = parse_manifest(xml_text, manifest_url, release_version)
     except RuntimeError as e:
         log.error(str(e))
