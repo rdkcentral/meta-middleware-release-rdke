@@ -11,7 +11,7 @@
 
 
 ### <RDKE_LAYER> Release Details
-[<RDKE_LAYER> Release <RELEASE_VERSION>](<BASE_URL>/releases/tag/<RELEASE_VERSION>) has the below enlisted layer combination.
+[<RDKE_LAYER> Release <RELEASE_VERSION>](<BASE_URL>/releases/tag/<RELEASE_VERSION>) has the layer combination listed below.
 
 | Layer Name | Current Revision/Tag |
 |------------|-------------------|
@@ -23,7 +23,7 @@ For a comprehensive list of changes, updates, and release history, refer to the 
 
 <FEATURE_LIST_LINE>
 
-<TEST_REPORT_LINE>
+<RELEASE_REPORT_LINK>
 
 For RDKE <RDKE_LAYER> layer specific build instructions, refer to [this](<BASE_URL>/blob/<RELEASE_VERSION>/README.md)
 

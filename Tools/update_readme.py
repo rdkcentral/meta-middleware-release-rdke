@@ -496,9 +496,9 @@ def main():
         sys.exit(1)
 
     # Fill test report line if provided
-    test_report_line = ''
+    release_report_link = ''
     if test_report_url:
-        test_report_line = f"Release Details: [{test_report_url}]({test_report_url})"
+        release_report_link = f"Release Details: [{test_report_url}]({test_report_url})"
 
     # Set PACKAGE_LIST_LINE only for Vendor, Middleware, or Application layers
     if rdke_layer in ["Vendor", "Middleware", "Application"]:
@@ -515,7 +515,7 @@ def main():
     content = content.replace('<FEATURE_LIST_LINE>', feature_list_line)
     content = content.replace('<GEN_DATE>', gen_date)
     content = content.replace('<AUTHOR>', author)
-    content = content.replace('<TEST_REPORT_LINE>', test_report_line)
+    content = content.replace('<RELEASE_REPORT_LINK>', release_report_link)
 
     try:
         with io.open(output_file, 'w', encoding='utf-8') as f:
