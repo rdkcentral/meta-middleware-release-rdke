@@ -397,7 +397,7 @@ def main():
     feature_list_url = sys.argv[5] if len(sys.argv) == 6 else ''
     feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
 
-    base_url = release_info.get('MANIFEST_REPO_BASE_URL', '')
+    base_url = release_info.get('MANIFEST_REPO_BASE_URL', '').rstrip('/')
     original_base_url = base_url
     manifest_name = release_info.get('MANIFEST_NAME', '')
     if not manifest_name.endswith('.xml'):
