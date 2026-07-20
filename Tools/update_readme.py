@@ -215,13 +215,13 @@ def update_package_versions_md(md_path, url_map):
         if re.search(r'\[[^\]]+\]\([^\)]+\)', line):
             log.info(f"Skipping line {idx + 1} as it already contains a hyperlink ({line.strip()}).")
             continue
-        m = re.match(r'\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|', line)
+        m = re.match(r'^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|(.*)$', line)
         if m:
-            pkg, ver = m.group(1).strip(), m.group(2).strip()
+            pkg, ver, rest = m.group(1).strip(), m.group(2).strip(), m.group(3).rstrip('\n')
             comp_name = pkg[len(MLPREFIX):] if pkg.startswith(MLPREFIX) else pkg
             base_url = url_map.get(comp_name)
             if base_url and ver:
-                jobs.append((idx, pkg, ver, base_url))
+                jobs.append((idx, pkg, ver, base_url, rest))
 
     log.info(f"Processing {md_path}: jobs={len(jobs)}, max_workers={NUM_THREADS}")
 
@@ -229,16 +229,16 @@ def update_package_versions_md(md_path, url_map):
     results = {}
     with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
         future_to_job = {}
-        for idx, pkg, ver, base_url in jobs:
+        for idx, pkg, ver, base_url, rest in jobs:
             future = executor.submit(hyperlink_constructor, pkg, base_url, ver)
-            future_to_job[future] = (idx, pkg, ver, base_url)
+            future_to_job[future] = (idx, pkg, ver, base_url, rest)
             if SUBMIT_DELAY_SEC > 0:
                 time.sleep(SUBMIT_DELAY_SEC)
         for future in as_completed(future_to_job):
-            idx, pkg, ver, base_url = future_to_job[future]
+            idx, pkg, ver, base_url, rest = future_to_job[future]
             try:
                 link = future.result()
-                results[idx] = f'| {pkg} | {link} |\n'
+                results[idx] = f'| {pkg} | {link} |{rest}\n'
             except Exception as e:
                 log.error(f"Error hyperlinking {pkg}: {e}")
                 results[idx] = lines[idx]  # fallback to original line
