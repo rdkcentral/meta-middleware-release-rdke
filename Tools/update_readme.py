@@ -387,13 +387,13 @@ def main():
 
     if len(sys.argv) not in (5, 6):
         log.error("Setup requirements (one time): pip install requests")
-        log.error("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md \"AUTHOR,email\" \"<TestReportUrl>\" [<FeatureListUrl>]")
+        log.error("Usage: python3 Tools/update_readme.py Tools/README_TEMPLATE.md README.md \"AUTHOR,email\" \"<ReleaseReportUrl>\" [<FeatureListUrl>]")
         sys.exit(1)
 
     template_file = sys.argv[1]
     output_file = sys.argv[2]
     author = sys.argv[3]
-    test_report_url = sys.argv[4]
+    release_report_url = sys.argv[4]
     feature_list_url = sys.argv[5] if len(sys.argv) == 6 else ''
     feature_list_line = f"List of features: {feature_list_url}" if feature_list_url else ''
 
@@ -497,8 +497,8 @@ def main():
 
     # Fill test report line if provided
     release_report_link = ''
-    if test_report_url:
-        release_report_link = f"Release Details: [{test_report_url}]({test_report_url})"
+    if release_report_url:
+        release_report_link = f"Release Details: [{release_report_url}]({release_report_url})"
 
     # Set PACKAGE_LIST_LINE (RDKE_LAYER is validated above)
     package_list_line = f"The [packages and versions]({rdke_layer}PackagesAndVersions.md) file provides the list of packages in this {rdke_layer} release."
