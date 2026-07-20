@@ -495,7 +495,7 @@ def main():
         log.error(f"Error reading template file {template_file}: {e}")
         sys.exit(1)
 
-    # Fill test report line if provided
+    # Fill release report line if provided
     release_report_link = ''
     if release_report_url:
         release_report_link = f"Release Details: [{release_report_url}]({release_report_url})"

@@ -10,12 +10,12 @@
 # Setup requirements (one time): pip install requests
 # RDKE_LAYER can be Vendor/Middleware/Application
 # Script now supports GITHUB_API_TOKEN environment variable (optional) to reduce the GitHub API rate limit failures.
-Usage: export GITHUB_API_TOKEN="<Token>"; python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md "AUTHOR,email" "TestReportUrl" [FeatureListUrl]
+Usage: export GITHUB_API_TOKEN="<Token>"; python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md "AUTHOR,email" "<ReleaseReportUrl>" [<FeatureListUrl>]
 ```
  - Most configuration is now read from `release_information.conf`.
  - The script will automatically update `<RDKE_LAYER>PackagesAndVersions.md` with hyperlinks for each package with the help of `component_urls.conf` provided details.
  - Adjust paths and shell syntax for your OS (Windows/Linux/Mac).
 Eg (Linux Host):
 ```sh
-python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md "ReleaseTeam, email_id" "https://example.com/test-report" "https://example.com/features"
+python3 ./Tools/update_readme.py ./Tools/README_TEMPLATE.md ./README.md "ReleaseTeam, email_id" "https://example.com/Detailed-report" "https://example.com/features"
 ```
