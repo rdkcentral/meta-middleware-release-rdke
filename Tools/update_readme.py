@@ -28,9 +28,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 class Logger:
-    LEVELS = {"debug": 10, "info": 20, "warn": 30, "error": 40}
+    LEVELS = {"debug": 10, "info": 20, "warn": 30, "warning": 30, "error": 40}
     def __init__(self, level="info"):
-        self.level = self.LEVELS.get(level, 20)
+        normalized_level = str(level).strip().lower()
+        self.level = self.LEVELS.get(normalized_level, 20)
     def debug(self, msg):
         if self.level <= self.LEVELS["debug"]:
             print(f"[DEBUG] {msg}")
