@@ -320,10 +320,10 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
         if inc_remote and inc_remote in remote_table:
             fetch_url = remote_table[inc_remote]
         else:
-             # Use current manifest's repo URL (repository root, without tag/file).
-             # Supports manifests located in subdirectories under the revision.
-             parts = manifest_url.split('/')
-             fetch_url = '/'.join(parts[:5]) if len(parts) >= 5 else manifest_url.rsplit('/', 2)[0]
+            # Use current manifest's repo URL (repository root, without tag/file).
+            # Supports manifests located in subdirectories under the revision.
+            parts = manifest_url.split('/')
+            fetch_url = '/'.join(parts[:5]) if len(parts) >= 5 else manifest_url.rsplit('/', 2)[0]
         # Convert github.com to raw.githubusercontent.com for fetching manifests
         if fetch_url.startswith("https://github.com"):
             fetch_url = fetch_url.replace("https://github.com", "https://raw.githubusercontent.com")
@@ -500,11 +500,8 @@ def main():
     if test_report_url:
         release_report_link = f"Release Details: [{test_report_url}]({test_report_url})"
 
-    # Set PACKAGE_LIST_LINE only for Vendor, Middleware, or Application layers
-    if rdke_layer in ["Vendor", "Middleware", "Application"]:
-        package_list_line = f"The [packages and versions]({rdke_layer}PackagesAndVersions.md) file provides the list of packages in this {rdke_layer} release."
-    else:
-        package_list_line = ""
+    # Set PACKAGE_LIST_LINE (RDKE_LAYER is validated above)
+    package_list_line = f"The [packages and versions]({rdke_layer}PackagesAndVersions.md) file provides the list of packages in this {rdke_layer} release."
 
     content = content.replace('<RELEASE_VERSION>', release_version)
     content = content.replace('<YOCTO_VERSION>', yocto_version)
