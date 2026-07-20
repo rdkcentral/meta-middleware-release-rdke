@@ -320,8 +320,10 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
         if inc_remote and inc_remote in remote_table:
             fetch_url = remote_table[inc_remote]
         else:
-            # Use current manifest's repo URL (repository root, without tag/file)
-            fetch_url = manifest_url.rsplit('/', 2)[0]
+             # Use current manifest's repo URL (repository root, without tag/file).
+             # Supports manifests located in subdirectories under the revision.
+             parts = manifest_url.split('/')
+             fetch_url = '/'.join(parts[:5]) if len(parts) >= 5 else manifest_url.rsplit('/', 2)[0]
         # Convert github.com to raw.githubusercontent.com for fetching manifests
         if fetch_url.startswith("https://github.com"):
             fetch_url = fetch_url.replace("https://github.com", "https://raw.githubusercontent.com")
@@ -494,9 +496,9 @@ def main():
         sys.exit(1)
 
     # Fill test report line if provided
-    test_report_line = ''
+    release_report_link = ''
     if test_report_url:
-        test_report_line = f"Release Details: [{test_report_url}]({test_report_url})"
+        release_report_link = f"Release Details: [{test_report_url}]({test_report_url})"
 
     # Set PACKAGE_LIST_LINE only for Vendor, Middleware, or Application layers
     if rdke_layer in ["Vendor", "Middleware", "Application"]:
@@ -513,7 +515,7 @@ def main():
     content = content.replace('<FEATURE_LIST_LINE>', feature_list_line)
     content = content.replace('<GEN_DATE>', gen_date)
     content = content.replace('<AUTHOR>', author)
-    content = content.replace('<TEST_REPORT_LINE>', test_report_line)
+    content = content.replace('<RELEASE_REPORT_LINK>', release_report_link)
 
     try:
         with io.open(output_file, 'w', encoding='utf-8') as f:
