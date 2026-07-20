@@ -271,6 +271,12 @@ def fetch_manifest_xml(manifest_url):
         log.error(f"Error fetching manifest XML from {manifest_url}: {e}")
         sys.exit(1)
 
+def normalize_tag(tag):
+    """Strip refs/tags/ prefix from tag to get the actual tag name."""
+    if tag and tag.startswith('refs/tags/'):
+        return tag[len('refs/tags/'):]
+    return tag
+
 def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None, remote_table=None, project_table=None):
     # Remove XML comments
     xml_text = COMMENT_RE.sub('', xml_text)
@@ -330,9 +336,10 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
             fetch_url = fetch_url.replace("https://github.com", "https://raw.githubusercontent.com")
         fetch_url = fetch_url.rstrip('/')
         # Build manifest URL
-        url = f"{fetch_url}/{inc_tag}/{inc_name}"
+        normalized_inc_tag = normalize_tag(inc_tag)
+        url = f"{fetch_url}/{normalized_inc_tag}/{inc_name}"
         inc_xml = fetch_manifest_xml(url)
-        parse_manifest(inc_xml, url, inc_tag, processed_manifests, remote_table, project_table)
+        parse_manifest(inc_xml, url, normalized_inc_tag, processed_manifests, remote_table, project_table)
 
     # Recursively process submanifests
     for subm in root.findall('submanifest'):
@@ -348,9 +355,10 @@ def parse_manifest(xml_text, manifest_url, release_tag, processed_manifests=None
             fetch_url = fetch_url.replace("https://github.com", "https://raw.githubusercontent.com")
         fetch_url = fetch_url.rstrip('/')
         # Build correct submanifest URL: {remote}/{project}/{revision}/{manifest-name}
-        url = f"{fetch_url}/{sub_project}/{sub_tag}/{sub_name}"
+        normalized_sub_tag = normalize_tag(sub_tag)
+        url = f"{fetch_url}/{sub_project}/{normalized_sub_tag}/{sub_name}"
         sub_xml = fetch_manifest_xml(url)
-        parse_manifest(sub_xml, url, sub_tag, processed_manifests, remote_table, project_table)
+        parse_manifest(sub_xml, url, normalized_sub_tag, processed_manifests, remote_table, project_table)
 
     return remote_table, project_table
 
