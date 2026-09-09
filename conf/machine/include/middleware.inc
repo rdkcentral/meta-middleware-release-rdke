@@ -6,7 +6,7 @@ RDK_ARTIFACTS_BASE_URL ?= ""
 DISTRO = "rdk"
 
 MIDDLEWARE_EXTENSION = "-middleware"
-MW_SPDX_TARBALL = file:///home/jenkins/community_shared/raspberrypi4-64-rdke-vendor/tarballs/raspberrypi4-64-rdke-mw.tgz"
+MW_SPDX_TARBALL ?= "file:///home/jenkins/community_shared/${MACHINE}-rdke-vendor/tarballs/${MACHINE}-rdke-mw.tgz"
 
 # Middleware IPK configuration
 
