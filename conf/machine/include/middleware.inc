@@ -20,6 +20,8 @@ MW_IPK_SERVER_PATH ?= "${RDK_ARTIFACTS_BASE_URL}/${MW_IPK_PATH}"
 IPK_FEED_URIS += " \
                 ${MIDDLEWARE_ARCH}##${MW_IPK_SERVER_PATH} "
 
+CVE_LAYER_FEED_PATH += "${MIDDLEWARE_ARCH}##file:///home/jenkins/community_shared/raspberrypi4-64-rdke-middleware/tarballs/raspberrypi4-64-rdke-middleware.tgz;sha256sum=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
 # Middleware OSS IPK configuration
 
 OSS_LAYER_VERSION = "4.14.1"
@@ -32,3 +34,5 @@ MW_OSS_IPK_SERVER_PATH ?= "${RDK_ARTIFACTS_BASE_URL}/${MW_OSS_IPK_PATH}"
 
 IPK_FEED_URIS += " \
                 ${MIDDLEWARE_OSS}##${MW_OSS_IPK_SERVER_PATH} "
+
+CVE_LAYER_FEED_PATH += "${MIDDLEWARE_OSS}##file:///home/jenkins/community_shared/raspberrypi4-64-rdke-middleware/tarballs/rdk-arm64-oss-middleware.tgz;sha256sum=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
